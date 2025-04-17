@@ -360,10 +360,21 @@ export async function getSuggestionsByDocumentId({
 
 export async function getMessageById({ id }: { id: string }) {
   try {
-    return await db.select().from(message).where(eq(message.id, id));
+    console.log('查询消息ID:', id);
+    const result = await db.query.messages.findMany({
+      where: eq(message.id, id),
+    });
+    
+    if (!result || result.length === 0) {
+      console.log('未找到消息ID:', id);
+      return []; // 返回空数组而不是抛出错误
+    }
+    
+    console.log('找到消息:', result[0].id, '聊天ID:', result[0].chatId);
+    return result;
   } catch (error) {
-    console.error('Failed to get message by id from database');
-    throw error;
+    console.error('查询消息时出错:', error);
+    return []; // 出错时返回空数组
   }
 }
 
@@ -417,5 +428,30 @@ export async function updateChatVisiblityById({
   } catch (error) {
     console.error('Failed to update chat visibility in database');
     throw error;
+  }
+}
+
+export async function getChatHistory({ limit }: { limit: number }) {
+  try {
+    console.log('获取聊天历史，限制:', limit);
+    const result = await db.query.chat.findMany({
+      orderBy: [desc(chat.createdAt)],
+      limit,
+      with: {
+        messages: {
+          orderBy: [asc(message.createdAt)],
+        },
+      },
+    });
+    
+    console.log(`找到 ${result.length} 个聊天记录`);
+    if (result.length > 0) {
+      console.log(`第一个聊天有 ${result[0].messages.length} 条消息`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('获取聊天历史出错:', error);
+    return [];
   }
 }

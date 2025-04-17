@@ -35,12 +35,28 @@ export async function generateTitleFromUserMessage({
 }
 
 export async function deleteTrailingMessages({ id }: { id: string }) {
-  const [message] = await getMessageById({ id });
-
-  await deleteMessagesByChatIdAfterTimestamp({
-    chatId: message.chatId,
-    timestamp: message.createdAt,
-  });
+  try {
+    const messages = await getMessageById({ id });
+    
+    if (!messages || messages.length === 0 || !messages[0]) {
+      console.error('消息未找到:', id);
+      return;
+    }
+    
+    const message = messages[0];
+    
+    if (!message.chatId) {
+      console.error('消息没有关联的聊天ID:', id);
+      return;
+    }
+    
+    await deleteMessagesByChatIdAfterTimestamp({
+      chatId: message.chatId,
+      timestamp: message.createdAt,
+    });
+  } catch (error) {
+    console.error('删除消息时发生错误:', error);
+  }
 }
 
 export async function updateChatVisibility({
