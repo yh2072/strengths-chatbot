@@ -350,19 +350,19 @@ export async function POST(request: Request) {
         if (fullContent) {
           console.log('保存AI响应到数据库，长度:', fullContent.length);
           console.log('内容预览:', fullContent.substring(0, 100) + '...');
-          
-          await saveMessages({
-            messages: [
-              {
+
+                await saveMessages({
+                  messages: [
+                    {
                 chatId,
                 id: generateUUID(),
                 role: 'assistant',
                 parts: [fullContent],
                 attachments: [],
-                createdAt: new Date(),
-              },
-            ],
-          });
+                      createdAt: new Date(),
+                    },
+                  ],
+                });
           
           console.log('AI响应已成功保存到数据库');
           return true;

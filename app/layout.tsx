@@ -2,6 +2,7 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { redirect } from 'next/navigation';
 
 import './globals.css';
 
@@ -52,6 +53,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 临时重定向到游戏区进行测试
+  // redirect('/exercises');
+  
   return (
     <html
       lang="en"

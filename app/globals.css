@@ -168,15 +168,17 @@
 @keyframes fadeIn {
     from {
         opacity: 0;
+        transform: translateY(10px);
     }
 
     to {
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
-.fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
 }
 
 /* 上浮动画 */
@@ -298,4 +300,87 @@
 /* 应用字体到所有元素 */
 html {
     font-family: 'Yozai', system-ui, sans-serif;
+}
+
+/* 为消息添加打字机效果的动画 */
+@keyframes typing {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.typing-animation {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 1s steps(40, end);
+}
+
+/* 为背景添加更好的动画效果 */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* 增加鼠标悬停效果的过渡动画 */
+.hover-scale {
+    transition: transform 0.2s ease-in-out;
+}
+
+.hover-scale:hover {
+    transform: scale(1.03);
+}
+
+/* 添加更多光晕效果 */
+.glow {
+    position: relative;
+}
+
+.glow::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    box-shadow: 0 0 15px 0 rgba(79, 70, 229, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.glow:hover::after {
+    opacity: 1;
+}
+
+/* 进度条动画 */
+@keyframes progress {
+    0% {
+        width: 0%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+.animate-progress {
+    animation: progress 1s ease-out forwards;
 }

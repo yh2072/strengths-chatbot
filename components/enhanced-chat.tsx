@@ -210,65 +210,87 @@ export default function EnhancedChat({ id, selectedModel }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50">
-      {/* 顶部导航 */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-indigo-100 p-4 shadow-sm">
+    <div className="flex flex-col h-screen bg-transparent relative">
+      {/* 顶部导航，已经被移到layout.tsx，这里可以保留一些具体到聊天的信息 */}
+      <div className="bg-white/70 backdrop-blur-sm py-3 px-4 border-b border-indigo-100/50 shadow-sm z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-xl bg-indigo-500 flex items-center justify-center shadow-sm mr-3">
-              <span className="text-white text-sm font-bold">夸</span>
-            </div>
-            <h1 className="text-xl font-bold text-gray-800">夸夸星球</h1>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full font-medium">
+              {selectedModel || 'Claude 3'}
+            </span>
+            <span className="text-xs text-gray-500">|</span>
+            <span className="text-xs text-gray-600">
+              对话ID: <span className="font-mono text-indigo-600">{id?.substring(0, 8) || 'New'}</span>
+            </span>
           </div>
-          <div className="text-sm text-gray-600">
-            使用模型: <span className="font-medium text-indigo-600">{selectedModel || 'Claude 3'}</span>
+          
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="text-xs flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>刷新</span>
+            </button>
           </div>
         </div>
       </div>
       
-      {/* 消息区域 */}
+      {/* 消息区域 - 加入平滑滚动和背景图案 */}
       <div className="flex-1 overflow-auto p-6 bg-transparent">
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.length === 0 ? (
-            <div className="text-center py-20 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-indigo-100/50 p-8 fade-in">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+            <div className="text-center py-20 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-indigo-100/50 p-8 transition-all duration-300 hover:shadow-md">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-700 mb-2">开始一段对话</h3>
-              <p className="text-gray-500 max-w-md mx-auto">
-                可以询问任何问题，AI助手将为您提供帮助。
-              </p>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">开始一段新对话</h3>
+              <p className="text-gray-600 mb-6">与AI助手聊天，探索自我成长的旅程</p>
+              <div className="grid grid-cols-2 gap-2 max-w-xs mx-auto">
+                <div className="text-left p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                  <h4 className="font-medium text-sm text-indigo-700 mb-1">🔍 性格探索</h4>
+                  <p className="text-xs text-gray-600">「请分析我的优势和潜力」</p>
+                </div>
+                <div className="text-left p-3 bg-purple-50 rounded-lg border border-purple-100">
+                  <h4 className="font-medium text-sm text-purple-700 mb-1">🌱 成长规划</h4>
+                  <p className="text-xs text-gray-600">「如何培养积极思维？」</p>
+                </div>
+              </div>
             </div>
           ) : (
-            messages.map((msg, i) => (
+            messages.map((msg, index) => (
               <div 
-                key={i} 
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                key={msg.id || index} 
+                className={`flex ${msg.role === 'user' ? 'justify-end' : msg.role === 'system' ? 'justify-center' : 'justify-start'} animate-fadeIn`}
               >
                 <div 
                   className={`relative max-w-xl rounded-2xl px-4 py-3 ${
                     msg.role === 'user' 
-                      ? 'bg-indigo-600 text-white shadow-sm' 
+                      ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white shadow-sm' 
                       : msg.role === 'system' 
                       ? 'bg-red-100 text-red-700 mx-auto text-center' 
                       : 'bg-white/90 backdrop-blur-sm text-gray-800 border border-indigo-100/50 shadow-sm'
-                  } ${msg.error ? 'border-red-500 border-2' : ''}`}
+                  } ${msg.error ? 'border-red-500 border-2' : ''} transition-all duration-200 hover:shadow-md`}
                 >
-                  {/* 角色图标 */}
+                  {/* 角色图标 - 更时尚的设计 */}
                   {msg.role !== 'system' && (
                     <div 
-                      className={`absolute top-0 ${msg.role === 'user' ? '-right-2' : '-left-2'} -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center ${
-                        msg.role === 'user' ? 'bg-indigo-700' : 'bg-white border border-indigo-100'
+                      className={`absolute top-0 ${msg.role === 'user' ? '-right-2' : '-left-2'} -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center ${
+                        msg.role === 'user' 
+                        ? 'bg-gradient-to-br from-indigo-700 to-purple-800 ring-2 ring-white' 
+                        : 'bg-white border border-indigo-100 shadow-sm'
                       }`}
                     >
                       {msg.role === 'user' ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       )}
@@ -282,14 +304,14 @@ export default function EnhancedChat({ id, selectedModel }) {
             ))
           )}
           
-          {/* 加载指示器 */}
+          {/* 加载指示器 - 更漂亮的动画 */}
           {isLoading && (
-            <div className="flex justify-start">
+            <div className="flex justify-start animate-fadeIn">
               <div className="bg-white/90 backdrop-blur-sm border border-indigo-100/50 rounded-2xl px-4 py-3 max-w-xl shadow-sm">
                 <div className="flex space-x-2">
-                  <div className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                  <div className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  <div className="h-2 w-2 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full animate-bounce"></div>
+                  <div className="h-2 w-2 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="h-2 w-2 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                 </div>
               </div>
             </div>
@@ -299,19 +321,19 @@ export default function EnhancedChat({ id, selectedModel }) {
         </div>
       </div>
 
-      {/* 输入区域 */}
-      <div className="border-t border-indigo-100 bg-white/80 backdrop-blur-sm p-4">
+      {/* 输入区域 - 更现代的设计 */}
+      <div className="border-t border-indigo-100 bg-white/80 backdrop-blur-sm p-4 relative z-10">
         <div className="max-w-3xl mx-auto">
           <form onSubmit={handleSubmit} className="relative">
-            {/* 表情选择器 */}
+            {/* 表情选择器 - 更好的视觉效果 */}
             {showEmojis && (
-              <div className="absolute bottom-full mb-2 bg-white rounded-lg shadow-lg border border-indigo-100 p-2 grid grid-cols-5 gap-1">
+              <div className="absolute bottom-full mb-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-indigo-100 p-2 grid grid-cols-5 gap-1 transition-all animate-fadeIn">
                 {emojis.map(emoji => (
                   <button
                     key={emoji}
                     type="button"
                     onClick={() => addEmoji(emoji)}
-                    className="text-xl hover:bg-indigo-50 rounded p-1 transition-colors"
+                    className="text-xl hover:bg-indigo-50 rounded-lg p-1 transition-all duration-200 hover:scale-110"
                   >
                     {emoji}
                   </button>
@@ -319,34 +341,36 @@ export default function EnhancedChat({ id, selectedModel }) {
               </div>
             )}
             
-            <div className="flex rounded-xl border border-indigo-200 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400 bg-white shadow-sm">
-              {/* 表情按钮 */}
+            <div className="flex rounded-xl border border-indigo-200 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
+              {/* 表情按钮 - 添加动画效果 */}
               <button
                 type="button"
                 onClick={() => setShowEmojis(!showEmojis)}
-                className="px-3 text-gray-500 hover:text-indigo-600 transition-colors"
+                className="px-3 text-gray-500 hover:text-indigo-600 transition-colors duration-200 hover:bg-indigo-50"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
               
-              {/* 输入框 */}
+              {/* 输入框 - 改进的样式 */}
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="输入问题..."
-                className="flex-1 py-3 px-2 outline-none"
+                className="flex-1 py-3 px-2 outline-none text-gray-700"
                 disabled={isLoading}
               />
               
-              {/* 发送按钮 */}
+              {/* 发送按钮 - 添加动画效果 */}
               <button 
                 type="submit" 
                 className={`px-4 flex items-center justify-center ${
-                  isLoading || !input.trim() ? 'bg-indigo-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+                  isLoading || !input.trim() 
+                  ? 'bg-indigo-300 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform transition-all duration-200 hover:scale-105'
                 } text-white transition-colors`}
                 disabled={isLoading || !input.trim()}
               >
@@ -356,9 +380,14 @@ export default function EnhancedChat({ id, selectedModel }) {
               </button>
             </div>
             
-            {/* 功能提示 */}
+            {/* 功能提示 - 更精致的设计 */}
             <div className="mt-2 text-xs text-gray-500 text-center">
-              提示：使用 Enter 发送，按表情图标可添加表情
+              <span className="px-2 py-1 rounded-full bg-gray-100 inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                使用 Enter 发送，按表情图标添加表情
+              </span>
             </div>
           </form>
         </div>
