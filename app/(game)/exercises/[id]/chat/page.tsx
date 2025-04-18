@@ -11,19 +11,19 @@ import { toast } from 'sonner';
 const CHARACTERS = {
   einstein: {
     name: '爱因斯坦',
-    avatar: '/characters/einstein.png',
+    avatar: '/images/einstein.png',
     greeting: "啊哈！我是爱因斯坦博士。相对论告诉我们，时间是相对的——但你的优势却是绝对的！今天我们要进行一个奇妙的思想实验：将你的核心优势与工作任务融合，就像我把质量与能量统一在E=mc²中一样！准备好了吗？",
     promptTemplate: `你是爱因斯坦博士，一位既有天才头脑又充满温暖幽默感的科学家。你在帮助人们发现自己内在优势的同时，会用你标志性的口头禅"想象力比知识更重要"和偶尔冒出的物理学笑话来活跃气氛。现在你正在引导用户完成"优势对齐"练习，请根据用户的回答继续这个对话。`
   },
   doraemon: {
     name: '哆啦A梦',
-    avatar: '/characters/doraemon.png', 
+    avatar: '/images/doraemon.png', 
     greeting: "哇！你好啊！我是哆啦A梦，从未来世界来帮助你的！今天我要从四次元口袋里拿出一个超棒的道具——'优势放大镜'！这个道具可以帮你看清自己的闪光点，然后把它们用在工作中，让工作变得超有趣！准备好一起探险了吗？",
     promptTemplate: `你是来自22世纪的机器猫哆啦A梦，带着神奇的四次元口袋来到现在，目的是帮助用户发掘内在优势并活出更精彩的人生。你说话风格活泼可爱，经常使用"哇"、"啊"等语气词，并会适时提到你的四次元口袋里的道具来比喻学习工具。现在你正在引导用户完成"优势对齐"练习，请根据用户的回答继续这个对话。`
   },
   dumbledore: {
     name: '邓布利多教授',
-    avatar: '/characters/dumbledore.png',
+    avatar: '/images/dumbledore.png',
     greeting: "亲爱的同学，欢迎来到霍格沃茨优势学院。我是阿不思·邓布利多教授。正如我常说，'我们的选择，远比我们的能力更能展现我们是谁。'今天，我们将探索你内在的魔法优势，并学习如何在日常工作中施展这些魔法。你准备好开始这段奇妙的旅程了吗？或许来颗柠檬雪宝？",
     promptTemplate: `你是霍格沃茨的邓布利多教授，一位充满智慧、幽默且深谙人性的魔法导师。你善于发现每个人内在的"魔法"(即优势)，并教导他们如何运用这些魔法面对生活挑战。你说话时会引用魔法世界的典故，偶尔提到柠檬雪宝糖，语气温和却充满力量。现在你正在引导用户完成"优势对齐"练习，请根据用户的回答继续这个对话。`
   }
@@ -408,13 +408,13 @@ export default function GameChatPage() {
   }
   
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-      {/* 顶部信息栏 */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-indigo-100 bg-white/70 backdrop-blur-sm">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
+      {/* 顶部信息栏 - 增强玻璃效果 */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-indigo-100 bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
         <div className="flex items-center space-x-4">
           <Link 
             href={`/exercises/${id}/select`}
-            className="text-indigo-600 hover:text-indigo-800"
+            className="text-indigo-600 hover:text-indigo-800 transition-colors p-2 rounded-full hover:bg-indigo-50"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -427,8 +427,8 @@ export default function GameChatPage() {
         </div>
         
         <div className="flex items-center space-x-3">
-          <div className="flex items-center bg-indigo-50 px-3 py-1 rounded-full">
-            <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
+          <div className="flex items-center bg-gradient-to-r from-indigo-100 to-purple-100 px-3 py-1.5 rounded-full shadow-sm">
+            <div className="w-7 h-7 rounded-full overflow-hidden mr-2 border-2 border-white shadow-sm">
               <img 
                 src={character.avatar || `https://ui-avatars.com/api/?name=${character.name}`}
                 alt={character.name}
@@ -440,35 +440,42 @@ export default function GameChatPage() {
         </div>
       </div>
       
-      {/* 进度指示器 */}
-      <div className="bg-white px-6 py-3 border-b border-indigo-100">
+      {/* 进度指示器 - 更现代的设计 */}
+      <div className="bg-white/80 backdrop-blur-md px-6 py-4 border-b border-indigo-100 shadow-sm">
         {/* 步骤提示 */}
-        <div className="text-xs text-gray-500 mb-2">
-          步骤 {currentStep.index + 1}/5: 
-          {currentStep.index === 0 && "列出工作任务"}
-          {currentStep.index === 1 && "确认性格优势"}
-          {currentStep.index === 2 && "将优势与任务结合"}
-          {currentStep.index === 3 && "制定实践计划"}
-          {currentStep.index === 4 && "反思与总结"}
+        <div className="flex justify-between mb-3">
+          <div className="text-sm font-medium text-gray-700">
+            <span className="bg-indigo-600 text-white rounded-full w-6 h-6 inline-flex items-center justify-center mr-2">
+              {currentStep.index + 1}
+            </span>
+            {currentStep.index === 0 && "列出工作任务"}
+            {currentStep.index === 1 && "确认性格优势"}
+            {currentStep.index === 2 && "将优势与任务结合"}
+            {currentStep.index === 3 && "制定实践计划"}
+            {currentStep.index === 4 && "反思与总结"}
+          </div>
+          <div className="text-xs text-indigo-600 font-medium">
+            {currentStep.index + 1}/5
+          </div>
         </div>
         
         {/* 进度条 */}
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
           <div 
-            className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full transition-all duration-500 ease-in-out"
             style={{ width: `${((currentStep.index + 1) / 5) * 100}%` }}
           ></div>
         </div>
       </div>
       
-      {/* 聊天区域 */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      {/* 聊天区域 - 更美观的气泡和间距 */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-gradient-to-br from-indigo-50/30 to-purple-50/30">
         {messages.map((message, index) => (
           <motion.div
             key={message.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, delay: 0.05 * (index % 5) }}
             className={`flex ${
               message.role === 'user' 
                 ? 'justify-end' 
@@ -478,51 +485,66 @@ export default function GameChatPage() {
             }`}
           >
             <div 
-              className={`max-w-[80%] rounded-2xl p-4 ${
+              className={`max-w-[85%] rounded-2xl p-4 shadow-sm ${
                 message.role === 'user' 
-                  ? 'bg-indigo-600 text-white rounded-tr-none' 
+                  ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-tr-none' 
                   : message.role === 'system' && message.isGuide
-                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm'
-                    : 'bg-white border border-indigo-100 shadow-sm rounded-tl-none'
+                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-md'
+                    : 'bg-white border border-indigo-100 rounded-tl-none'
               }`}
             >
               {message.role === 'assistant' && (
                 <div className="flex items-center mb-2">
-                  <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden mr-2 border-2 border-white shadow-sm">
                     <img 
                       src={character.avatar || `https://ui-avatars.com/api/?name=${character.name}`}
                       alt={character.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <span className="text-xs font-medium text-indigo-700">{character.name}</span>
+                  <span className="text-sm font-medium text-indigo-700">{character.name}</span>
                 </div>
               )}
               
-              <div className={`${message.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
+              <div className={`${
+                message.role === 'user' 
+                  ? 'text-white' 
+                  : message.role === 'system' && message.isGuide
+                    ? 'text-gray-700 font-medium prose prose-sm max-w-none'
+                    : 'text-gray-800'
+              }`}>
                 {message.content || (
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 bg-indigo-300 rounded-full animate-bounce"></div>
-                    <div className="h-2 w-2 bg-indigo-300 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    <div className="h-2 w-2 bg-indigo-300 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                  <div className="flex space-x-1 py-1">
+                    <div className="h-2.5 w-2.5 bg-indigo-300 rounded-full animate-bounce"></div>
+                    <div className="h-2.5 w-2.5 bg-indigo-300 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="h-2.5 w-2.5 bg-indigo-300 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
                   </div>
                 )}
               </div>
+              
+              {/* 消息时间戳 */}
+              {message.content && (
+                <div className={`text-[10px] mt-1 text-right ${
+                  message.role === 'user' ? 'text-indigo-100' : 'text-gray-400'
+                }`}>
+                  {new Date(message.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </div>
+              )}
             </div>
           </motion.div>
         ))}
         <div ref={messagesEndRef} />
       </div>
       
-      {/* 添加在消息列表底部，步骤导航控制 */}
+      {/* 步骤导航控制 - 更美观的卡片设计 */}
       {!isLoading && messages.length > 1 && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-center my-4"
         >
-          <div className="bg-white border border-indigo-100 rounded-lg shadow-sm p-4 max-w-md text-center">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-white border border-indigo-100 rounded-xl shadow-md p-4 max-w-md text-center bg-gradient-to-r from-white to-indigo-50/50">
+            <h3 className="text-sm font-semibold text-indigo-800 mb-2">
               {currentStep.index === 0 && "正在列出工作任务"}
               {currentStep.index === 1 && "正在确认性格优势"}
               {currentStep.index === 2 && "正在将优势与任务结合"}
@@ -538,14 +560,14 @@ export default function GameChatPage() {
               {currentStep.index === 4 && "观察能量和满足感的变化"}
             </p>
             
-            <div className="flex space-x-2 justify-center">
+            <div className="flex space-x-3 justify-center">
               {currentStep.index > 0 && (
                 <button
                   onClick={() => setCurrentStep(prevStep => ({
                     ...prevStep,
                     index: prevStep.index - 1
                   }))}
-                  className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
                 >
                   上一步
                 </button>
@@ -554,11 +576,11 @@ export default function GameChatPage() {
               {currentStep.index < 4 && (
                 <button
                   onClick={advanceToNextStep}
-                  className={`px-3 py-1.5 rounded-lg ${
+                  className={`px-4 py-2 rounded-lg ${
                     shouldShowNextStepButton 
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md' 
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  } transition-colors`}
+                  } transition-all text-sm font-medium`}
                   disabled={!shouldShowNextStepButton}
                 >
                   继续下一步
@@ -574,14 +596,14 @@ export default function GameChatPage() {
         </motion.div>
       )}
       
-      {/* 输入区域 */}
-      <div className="border-t border-indigo-100 bg-white p-4">
+      {/* 输入区域 - 更优雅的输入框设计 */}
+      <div className="border-t border-indigo-100 bg-white/90 backdrop-blur-md p-4 sticky bottom-0 shadow-md">
         <form onSubmit={handleSubmit} className="relative">
           <div className="relative flex">
             <button
               type="button"
               onClick={() => setShowEmojis(!showEmojis)}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z" clipRule="evenodd" />
@@ -593,37 +615,39 @@ export default function GameChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="输入你的回复..."
-              className="flex-1 py-3 pl-10 pr-16 rounded-xl border border-indigo-200 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400"
+              className="flex-1 py-3.5 pl-12 pr-20 rounded-full border border-indigo-200 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 placeholder-gray-400 shadow-sm transition-all bg-white/80"
               disabled={isLoading}
               ref={inputRef}
             />
             
             <button 
               type="submit" 
-              className={`absolute right-3 top-1/2 transform -translate-y-1/2 rounded-lg px-3 py-1.5 ${
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full w-10 h-10 flex items-center justify-center ${
                 isLoading || !input.trim() 
                   ? 'bg-indigo-300 cursor-not-allowed' 
-                  : 'bg-indigo-600 hover:bg-indigo-700'
-                } text-white transition-colors`}
+                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md'
+                } text-white transition-all`}
               disabled={isLoading || !input.trim()}
             >
-              发送
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
             </button>
           </div>
           
-          {/* 表情选择器 */}
+          {/* 表情选择器 - 更精美的表情面板 */}
           {showEmojis && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute bottom-full left-0 mb-2 bg-white shadow-lg border border-gray-200 rounded-lg p-2 flex flex-wrap max-w-xs"
+              className="absolute bottom-full left-0 mb-2 bg-white shadow-lg border border-gray-200 rounded-xl p-3 flex flex-wrap max-w-xs gap-1"
             >
               {emojis.map(emoji => (
                 <button
                   key={emoji}
                   type="button"
                   onClick={() => addEmoji(emoji)}
-                  className="p-1.5 text-xl hover:bg-indigo-50 rounded"
+                  className="p-2 text-xl hover:bg-indigo-50 rounded-lg transition-colors"
                 >
                   {emoji}
                 </button>
@@ -633,46 +657,61 @@ export default function GameChatPage() {
         </form>
       </div>
       
-      {/* 显示步骤推进提示 */}
+      {/* 步骤推进提示 - 更美观的通知 */}
       {showStepAdvanceHint && shouldShowNextStepButton && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 rounded-lg shadow-md"
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-xl shadow-lg"
         >
           <div className="flex items-center space-x-3">
-            <div className="bg-white/20 rounded-full p-1">
+            <div className="bg-white/20 rounded-full p-1.5">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-sm font-medium">步骤已完成</p>
+            <p className="text-sm font-medium">步骤已完成，可以继续了</p>
           </div>
         </motion.div>
       )}
       
-      {/* 如果AI响应数不足也使用相同色系 */}
+      {/* AI响应数不足提示 */}
       {showStepAdvanceHint && currentStep.completed && hasReceivedAiResponse && currentStep.aiResponseCount < 2 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-400 to-purple-500 text-white p-3 rounded-lg shadow-md"
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-400 to-purple-500 text-white p-4 rounded-xl shadow-lg"
         >
-          <p className="text-sm font-medium">再多交流一次就可以进入下一步啦</p>
+          <div className="flex items-center space-x-3">
+            <div className="bg-white/20 rounded-full p-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium">再多交流一次就可以进入下一步啦</p>
+          </div>
         </motion.div>
       )}
       
-      {/* 在最后步骤时显示完成奖励 */}
+      {/* 最后步骤完成奖励 - 更华丽的成就展示 */}
       {currentStep.index === 4 && messages.length > 5 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg shadow-lg"
+          transition={{ 
+            type: "spring",
+            stiffness: 260,
+            damping: 20
+          }}
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-5 rounded-xl shadow-xl"
         >
           <div className="text-center">
-            <h3 className="font-bold mb-1">恭喜完成练习!</h3>
-            <div className="text-2xl mb-2">🎉</div>
-            <p className="text-sm">获得50积分奖励</p>
+            <div className="text-3xl mb-3 animate-bounce">🎉</div>
+            <h3 className="font-bold text-lg mb-1">恭喜完成练习!</h3>
+            <div className="bg-white/20 h-px w-full my-2"></div>
+            <p className="text-sm mb-1">获得成就:</p>
+            <p className="font-bold text-yellow-200">✨ 优势探索家 ✨</p>
+            <p className="text-xs mt-2">+50积分</p>
           </div>
         </motion.div>
       )}

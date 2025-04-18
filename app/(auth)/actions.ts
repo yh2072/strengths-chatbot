@@ -11,9 +11,11 @@ const authFormSchema = z.object({
   password: z.string().min(6),
 });
 
-export interface LoginActionState {
-  status: 'idle' | 'in_progress' | 'success' | 'failed' | 'invalid_data';
-}
+export type LoginActionState = 
+  | { status: 'idle' }
+  | { status: 'failed' }
+  | { status: 'invalid_data' }
+  | { status: 'success'; user: any };
 
 export const login = async (
   _: LoginActionState,
@@ -31,7 +33,7 @@ export const login = async (
       redirect: false,
     });
 
-    return { status: 'success' };
+    return { status: 'success', user: {} };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
@@ -41,15 +43,11 @@ export const login = async (
   }
 };
 
-export interface RegisterActionState {
-  status:
-    | 'idle'
-    | 'in_progress'
-    | 'success'
-    | 'failed'
-    | 'user_exists'
-    | 'invalid_data';
-}
+export type RegisterActionState = 
+  | { status: 'idle' }
+  | { status: 'failed'; reason?: string }
+  | { status: 'invalid_data' }
+  | { status: 'success' };
 
 export const register = async (
   _: RegisterActionState,
@@ -64,7 +62,7 @@ export const register = async (
     const [user] = await getUser(validatedData.email);
 
     if (user) {
-      return { status: 'user_exists' } as RegisterActionState;
+      return { status: 'failed', reason: '用户已存在' };
     }
     await createUser(validatedData.email, validatedData.password);
     await signIn('credentials', {

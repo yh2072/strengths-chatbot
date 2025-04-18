@@ -1,16 +1,16 @@
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { GameSidebar } from '@/components/game/exercises-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { auth } from '@/app/(auth)/auth';
-import { ClientGameLayout } from '@/components/game/client-game-layout';
+import ClientGameLayout from '@/components/game/client-game-layout';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { user } from '@/lib/db/schema';
+import { LogoutButton } from '@/components/ui/logout-button';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: '夸夸星球 - 成长乐园',
-  description: '通过有趣的互动游戏发现自我，培养积极心态',
+  description: '通过夸夸AI助手，培养积极心态和品格优势',
 };
 
 export default async function GameLayout({
@@ -18,9 +18,8 @@ export default async function GameLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
-
+  const session = await auth();
+  
   // 未登录则重定向到登录页
   if (!session?.user) {
     redirect('/login?from=/exercises');
@@ -46,13 +45,11 @@ export default async function GameLayout({
   } catch (error) {
     console.error('获取最新用户数据失败:', error);
   }
-
+  
   return (
-    <ClientGameLayout 
-      session={{user: userData}} 
-      isCollapsed={isCollapsed}
-    >
+    <ClientGameLayout session={{user: userData}}>
       {children}
+      
       {/* 领取奖励按钮脚本 */}
       <script src="/scripts/reward-button.js" async></script>
     </ClientGameLayout>

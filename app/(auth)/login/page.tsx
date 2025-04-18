@@ -43,6 +43,7 @@ export default function LoginPage() {
         description: '登录成功!',
       });
       router.refresh();
+      // @ts-ignore - 先忽略类型错误，需要更新LoginActionState类型
       storeUserInfo(state.user);
     }
   }, [state.status, router]);
@@ -114,7 +115,7 @@ export default function LoginPage() {
             </div>
             
             <AuthForm action={handleSubmit} defaultEmail={email}>
-              <SubmitButton isSuccessful={isSuccessful} className="w-full">登录</SubmitButton>
+              <SubmitButton isSuccessful={isSuccessful} className="w-full mx-auto">登录</SubmitButton>
               <p className="text-center text-sm text-gray-600 mt-4">
                 还没有账号？{' '}
                 <Link
@@ -133,7 +134,7 @@ export default function LoginPage() {
             </div>
             
             <div className="mt-10 text-center text-xs text-gray-500">
-              <p>©2025 日知阁教育科技 版权所有</p>
+              <p>©2025 上海日知阁教育科技有限公司 版权所有</p>
             </div>
           </div>
         </div>

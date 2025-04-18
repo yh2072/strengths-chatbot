@@ -1,59 +1,64 @@
+import { ReactNode } from 'react';
 import Form from 'next/form';
 
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
-export function AuthForm({
-  action,
-  children,
-  defaultEmail = '',
-}: {
-  action: NonNullable<
-    string | ((formData: FormData) => void | Promise<void>) | undefined
-  >;
-  children: React.ReactNode;
+interface AuthFormProps {
+  action: (formData: FormData) => void;
+  children: ReactNode;
   defaultEmail?: string;
-}) {
-  return (
-    <Form action={action} className="flex flex-col gap-4 px-4 sm:px-16">
-      <div className="flex flex-col gap-2">
-        <Label
-          htmlFor="email"
-          className="text-zinc-600 font-normal dark:text-zinc-400"
-        >
-          Email Address
-        </Label>
+  isRegister?: boolean;
+}
 
-        <Input
+export function AuthForm({ action, children, defaultEmail = '', isRegister = false }: AuthFormProps) {
+  return (
+    <Form action={action} className="space-y-4">
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          邮箱地址
+        </label>
+        <input
           id="email"
           name="email"
-          className="bg-muted text-md md:text-sm"
           type="email"
-          placeholder="user@acme.com"
-          autoComplete="email"
-          required
-          autoFocus
           defaultValue={defaultEmail}
+          required
+          placeholder="请输入您的邮箱"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
         />
       </div>
-
-      <div className="flex flex-col gap-2">
-        <Label
-          htmlFor="password"
-          className="text-zinc-600 font-normal dark:text-zinc-400"
-        >
-          Password
-        </Label>
-
-        <Input
+      
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          密码
+        </label>
+        <input
           id="password"
           name="password"
-          className="bg-muted text-md md:text-sm"
           type="password"
           required
+          placeholder="请输入您的密码"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
         />
       </div>
-
+      
+      {isRegister && (
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            确认密码
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            required
+            placeholder="请再次输入密码"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          />
+        </div>
+      )}
+      
       {children}
     </Form>
   );

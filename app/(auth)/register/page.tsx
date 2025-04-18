@@ -126,7 +126,7 @@ export default function RegisterPage() {
             </div>
             
             <AuthForm action={handleSubmit} defaultEmail={email} isRegister={true}>
-              <SubmitButton isSuccessful={isSuccessful} className="w-full">注册账户</SubmitButton>
+              <SubmitButton isSuccessful={isSuccessful} className="w-full mx-auto">注册账户</SubmitButton>
               <p className="text-center text-sm text-gray-600 mt-4">
                 已经是夸友了？{' '}
                 <Link
