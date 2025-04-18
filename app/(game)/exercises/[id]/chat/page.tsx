@@ -172,7 +172,7 @@ export default function GameChatPage() {
             const newCount = prev.aiResponseCount + 1;
             console.log(`步骤${prev.index+1}的AI响应计数: ${prev.aiResponseCount} -> ${newCount}`);
             
-            // 如果AI响应次数达到2次或以上，自动将步骤标记为完成
+            // 如果AI响应次数达到5次或以上，自动将步骤标记为完成
             const shouldAutoComplete = newCount >= 5;
             if (shouldAutoComplete && !prev.completed) {
               console.log(`基于响应次数自动完成步骤${prev.index+1}`);
@@ -249,12 +249,12 @@ export default function GameChatPage() {
   
   // 修改shouldShowNextStepButton的判断，添加日志
   console.log(`步骤${currentStep.index+1}当前状态: 已完成=${currentStep.completed}, AI响应=${currentStep.aiResponseCount}, 显示下一步按钮=${useMemo(() => {
-    const result = currentStep.completed && currentStep.aiResponseCount >= 2;
+    const result = currentStep.completed && currentStep.aiResponseCount >= 5;
     console.log(`步骤${currentStep.index+1}当前状态: 已完成=${currentStep.completed}, AI响应=${currentStep.aiResponseCount}, 显示下一步按钮=${result}`);
     return result;
   }, [currentStep.completed, currentStep.aiResponseCount, currentStep.index])}`);
   const shouldShowNextStepButton = useMemo(() => {
-    const result = currentStep.completed && currentStep.aiResponseCount >= 2;
+    const result = currentStep.completed && currentStep.aiResponseCount >= 5;
     console.log(`步骤${currentStep.index+1}当前状态: 已完成=${currentStep.completed}, AI响应=${currentStep.aiResponseCount}, 显示下一步按钮=${result}`);
     return result;
   }, [currentStep.completed, currentStep.aiResponseCount, currentStep.index]);
@@ -408,9 +408,9 @@ export default function GameChatPage() {
   }
   
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
+    <div className="flex flex-col h-screen w-full bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
       {/* 顶部信息栏 - 增强玻璃效果 */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-indigo-100 bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-indigo-100 bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
         <div className="flex items-center space-x-4">
           <Link 
             href={`/exercises/${id}/select`}
@@ -441,7 +441,7 @@ export default function GameChatPage() {
       </div>
       
       {/* 进度指示器 - 更现代的设计 */}
-      <div className="bg-white/80 backdrop-blur-md px-6 py-4 border-b border-indigo-100 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-md px-4 md:px-6 py-3 border-b border-indigo-100 shadow-sm">
         {/* 步骤提示 */}
         <div className="flex justify-between mb-3">
           <div className="text-sm font-medium text-gray-700">
@@ -469,7 +469,7 @@ export default function GameChatPage() {
       </div>
       
       {/* 聊天区域 - 更美观的气泡和间距 */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-gradient-to-br from-indigo-50/30 to-purple-50/30">
+      <div className="flex-1 overflow-y-auto p-3 md:p-5 space-y-4 md:space-y-6 bg-gradient-to-br from-indigo-50/30 to-purple-50/30">
         {messages.map((message, index) => (
           <motion.div
             key={message.id}
@@ -533,71 +533,73 @@ export default function GameChatPage() {
             </div>
           </motion.div>
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4 md:h-6" />
       </div>
       
-      {/* 步骤导航控制 - 更美观的卡片设计 */}
+      {/* 步骤导航控制 - 固定在消息区域底部 */}
       {!isLoading && messages.length > 1 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center my-4"
-        >
-          <div className="bg-white border border-indigo-100 rounded-xl shadow-md p-4 max-w-md text-center bg-gradient-to-r from-white to-indigo-50/50">
-            <h3 className="text-sm font-semibold text-indigo-800 mb-2">
-              {currentStep.index === 0 && "正在列出工作任务"}
-              {currentStep.index === 1 && "正在确认性格优势"}
-              {currentStep.index === 2 && "正在将优势与任务结合"}
-              {currentStep.index === 3 && "正在制定实践计划"}
-              {currentStep.index === 4 && "正在反思与总结"}
-            </h3>
-            
-            <p className="text-xs text-gray-500 mb-3">
-              {currentStep.index === 0 && "列出5项你在工作中最常执行的任务"}
-              {currentStep.index === 1 && "确认你的5大性格优势"}
-              {currentStep.index === 2 && "为每项任务找到应用优势的方式"}
-              {currentStep.index === 3 && "制定在日常工作中实践这些新方法的计划"}
-              {currentStep.index === 4 && "观察能量和满足感的变化"}
-            </p>
-            
-            <div className="flex space-x-3 justify-center">
-              {currentStep.index > 0 && (
-                <button
-                  onClick={() => setCurrentStep(prevStep => ({
-                    ...prevStep,
-                    index: prevStep.index - 1
-                  }))}
-                  className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
-                >
-                  上一步
-                </button>
-              )}
+        <div className="px-3 md:px-5 pb-3 pt-1 bg-gradient-to-br from-indigo-50/30 to-purple-50/30">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center"
+          >
+            <div className="bg-white border border-indigo-100 rounded-xl shadow-md p-4 max-w-md text-center bg-gradient-to-r from-white to-indigo-50/50">
+              <h3 className="text-sm font-semibold text-indigo-800 mb-2">
+                {currentStep.index === 0 && "正在列出工作任务"}
+                {currentStep.index === 1 && "正在确认性格优势"}
+                {currentStep.index === 2 && "正在将优势与任务结合"}
+                {currentStep.index === 3 && "正在制定实践计划"}
+                {currentStep.index === 4 && "正在反思与总结"}
+              </h3>
               
-              {currentStep.index < 4 && (
-                <button
-                  onClick={advanceToNextStep}
-                  className={`px-4 py-2 rounded-lg ${
-                    shouldShowNextStepButton 
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md' 
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  } transition-all text-sm font-medium`}
-                  disabled={!shouldShowNextStepButton}
-                >
-                  继续下一步
-                  {!shouldShowNextStepButton && currentStep.aiResponseCount > 0 && 
-                    <span className="text-xs ml-1">
-                      (需要再交流{Math.max(0, 2 - currentStep.aiResponseCount)}次)
-                    </span>
-                  }
-                </button>
-              )}
+              <p className="text-xs text-gray-500 mb-3">
+                {currentStep.index === 0 && "列出5项你在工作中最常执行的任务"}
+                {currentStep.index === 1 && "确认你的5大性格优势"}
+                {currentStep.index === 2 && "为每项任务找到应用优势的方式"}
+                {currentStep.index === 3 && "制定在日常工作中实践这些新方法的计划"}
+                {currentStep.index === 4 && "观察能量和满足感的变化"}
+              </p>
+              
+              <div className="flex space-x-3 justify-center">
+                {currentStep.index > 0 && (
+                  <button
+                    onClick={() => setCurrentStep(prevStep => ({
+                      ...prevStep,
+                      index: prevStep.index - 1
+                    }))}
+                    className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
+                  >
+                    上一步
+                  </button>
+                )}
+                
+                {currentStep.index < 4 && (
+                  <button
+                    onClick={advanceToNextStep}
+                    className={`px-4 py-2 rounded-lg ${
+                      shouldShowNextStepButton 
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    } transition-all text-sm font-medium`}
+                    disabled={!shouldShowNextStepButton}
+                  >
+                    继续下一步
+                    {!shouldShowNextStepButton && currentStep.aiResponseCount > 0 && 
+                      <span className="text-xs ml-1">
+                        (需要再交流{Math.max(0, 5 - currentStep.aiResponseCount)}次)
+                      </span>
+                    }
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
       
-      {/* 输入区域 - 更优雅的输入框设计 */}
-      <div className="border-t border-indigo-100 bg-white/90 backdrop-blur-md p-4 sticky bottom-0 shadow-md">
+      {/* 输入区域 - 更优雅的输入框设计，固定在底部 */}
+      <div className="border-t border-indigo-100 bg-white/90 backdrop-blur-md p-3 md:p-4 sticky bottom-0 shadow-md">
         <form onSubmit={handleSubmit} className="relative">
           <div className="relative flex">
             <button
@@ -657,12 +659,12 @@ export default function GameChatPage() {
         </form>
       </div>
       
-      {/* 步骤推进提示 - 更美观的通知 */}
+      {/* 弹出通知 - 调整位置以适应不同屏幕尺寸 */}
       {showStepAdvanceHint && shouldShowNextStepButton && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-xl shadow-lg"
+          className="fixed bottom-20 md:bottom-24 right-4 md:right-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 md:p-4 rounded-xl shadow-lg z-20"
         >
           <div className="flex items-center space-x-3">
             <div className="bg-white/20 rounded-full p-1.5">
@@ -675,12 +677,12 @@ export default function GameChatPage() {
         </motion.div>
       )}
       
-      {/* AI响应数不足提示 */}
-      {showStepAdvanceHint && currentStep.completed && hasReceivedAiResponse && currentStep.aiResponseCount < 2 && (
+      {/* AI响应数不足提示 - 调整位置 */}
+      {showStepAdvanceHint && currentStep.completed && hasReceivedAiResponse && currentStep.aiResponseCount < 5 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-400 to-purple-500 text-white p-4 rounded-xl shadow-lg"
+          className="fixed bottom-20 md:bottom-24 right-4 md:right-6 bg-gradient-to-r from-indigo-400 to-purple-500 text-white p-3 md:p-4 rounded-xl shadow-lg z-20"
         >
           <div className="flex items-center space-x-3">
             <div className="bg-white/20 rounded-full p-1.5">
@@ -688,12 +690,12 @@ export default function GameChatPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <p className="text-sm font-medium">再多交流一次就可以进入下一步啦</p>
+            <p className="text-sm font-medium">再多交流{Math.max(0, 5 - currentStep.aiResponseCount)}次就可以进入下一步啦</p>
           </div>
         </motion.div>
       )}
       
-      {/* 最后步骤完成奖励 - 更华丽的成就展示 */}
+      {/* 最后步骤完成奖励 - 调整位置 */}
       {currentStep.index === 4 && messages.length > 5 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -703,7 +705,7 @@ export default function GameChatPage() {
             stiffness: 260,
             damping: 20
           }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-5 rounded-xl shadow-xl"
+          className="fixed bottom-20 md:bottom-24 right-4 md:right-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-4 md:p-5 rounded-xl shadow-xl z-20"
         >
           <div className="text-center">
             <div className="text-3xl mb-3 animate-bounce">🎉</div>
