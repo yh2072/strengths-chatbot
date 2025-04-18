@@ -43,6 +43,20 @@
       "when": 1741934630596,
       "tag": "0005_wooden_whistler",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1744941773493,
+      "tag": "0006_ancient_living_lightning",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1744951127979,
+      "tag": "0007_familiar_old_lace",
+      "breakpoints": true
     }
   ]
 }

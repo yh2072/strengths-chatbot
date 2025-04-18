@@ -10,6 +10,7 @@ import { SubmitButton } from '@/components/submit-button';
 import LottieAnimation from '@/components/lottie-animation';
 
 import { login, type LoginActionState } from '../actions';
+import { storeUserInfo } from '@/app/actions/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function LoginPage() {
         description: '登录成功!',
       });
       router.refresh();
+      storeUserInfo(state.user);
     }
   }, [state.status, router]);
 

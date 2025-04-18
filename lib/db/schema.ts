@@ -9,12 +9,31 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,
+  serial,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
-export const user = pgTable('User', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  email: varchar('email', { length: 64 }).notNull(),
-  password: varchar('password', { length: 64 }),
+export type User = {
+  id: string;
+  email: string;
+  password?: string;
+  points: number;
+  level: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export const user = pgTable("User", {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  password: varchar('password', { length: 255 }),
+  name: varchar('name', { length: 255 }),
+  points: integer('points').default(0),
+  level: integer('level').default(1),
+  created_at: timestamp('created_at', { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+  updated_at: timestamp('updated_at', { mode: 'string' })
 });
 
 export type User = InferSelectModel<typeof user>;
@@ -150,3 +169,16 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
+
+export const userExercises = pgTable("user_exercises", {
+  id: serial("id").primaryKey(),
+  userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  exerciseId: text("exercise_id").notNull(),
+  completedAt: timestamp("completed_at").notNull(),
+  lastAttemptedAt: timestamp("last_attempted_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    userExerciseIdx: uniqueIndex("user_exercise_idx").on(table.userId, table.exerciseId),
+  };
+});

@@ -28,6 +28,15 @@ import { myProvider } from '@/lib/ai/providers';
 
 export const maxDuration = 60;
 
+// 定义一个通用类型，包含任何可能的文本属性
+type ChatPartWithContent = {
+  id?: string;
+  type?: string;
+  text?: string;
+  content?: string | any;
+  [key: string]: any; // 允许索引任意字符串属性
+};
+
 export async function POST(request: Request) {
   console.log('================== 开始处理聊天请求 ==================');
   const startTime = Date.now();
@@ -99,18 +108,18 @@ export async function POST(request: Request) {
         if (typeof part === 'string') return part;
         if (part && typeof part === 'object') {
           // 处理可能的文本对象
-          if (part.type === 'text' && part.text) {
+          if (part.text) {
             console.log('找到text类型:', part.text);
             return part.text;
           }
-          if (part.content) {
-            console.log('找到content属性:', part.content);
-            return String(part.content);
+          if ((part as ChatPartWithContent).content) {
+            console.log('找到content属性:', (part as ChatPartWithContent).content);
+            return String((part as ChatPartWithContent).content);
           }
           // 检查其他可能包含文本的属性
-          const textKeys = Object.keys(part).filter(key => 
-            typeof part[key] === 'string' && 
-            part[key].length > 0 &&
+          const textKeys = Object.keys(part as ChatPartWithContent).filter(key => 
+            typeof (part as any)[key] === 'string' && 
+            (part as any)[key].length > 0 &&
             key !== 'id' && key !== 'type'
           );
           
@@ -170,7 +179,7 @@ export async function POST(request: Request) {
     });
 
     // 使用最简单的硬编码方式创建响应流
-    function createAiSdkStream(apiResponse) {
+    function createAiSdkStream(apiResponse: any) {
       const { readable, writable } = new TransformStream();
       const writer = writable.getWriter();
       const encoder = new TextEncoder();
@@ -238,13 +247,13 @@ export async function POST(request: Request) {
     }
 
     // 辅助函数：从响应中提取内容
-    function extractContentFromResponse(responseText) {
+    function extractContentFromResponse(responseText: string) {
       try {
         // 方法1：使用正则表达式提取所有content值
         const contentMatches = responseText.match(/"content":"([^"]*)"/g) || [];
         if (contentMatches.length > 0) {
           return contentMatches
-            .map(match => match.replace(/"content":"/, '').replace(/"$/, ''))
+            .map((match: string) => match.replace(/"content":"/, '').replace(/"$/, ''))
             .join('');
         }
         

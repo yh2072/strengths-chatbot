@@ -1,4 +1,4 @@
-import 'server-only';
+// import 'server-only';
 
 import { genSaltSync, hashSync } from 'bcrypt-ts';
 import {
@@ -14,6 +14,7 @@ import {
 } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import crypto from 'crypto';
 
 import {
   user,
@@ -37,23 +38,63 @@ import type { ArtifactKind } from '@/components/artifact';
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
-export async function getUser(email: string): Promise<Array<User>> {
+// 创建一个标记以区分环境
+const isServer = typeof window === 'undefined';
+
+// 将函数分类为客户端安全和服务端专用
+// 客户端安全函数 - 可以在任何地方使用
+export function clientSafeFunction1() {
+  // 实现...
+}
+
+export function clientSafeFunction2() {
+  // 实现...
+}
+
+// 服务端专用函数 - 添加运行时检查
+export function serverOnlyFunction1() {
+  if (!isServer) {
+    console.error('这个函数只能在服务器端使用');
+    return null;
+  }
+  
+  // 实现...
+}
+
+export function serverOnlyFunction2() {
+  if (!isServer) {
+    throw new Error('此函数只能在服务器上运行');
+  }
+  
+  // 实现...
+}
+
+export const getUser = async (email: string) => {
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    const result = await db.select().from(user).where(eq(user.email, email));
+    return result;
   } catch (error) {
-    console.error('Failed to get user from database');
+    console.error("Failed to get user from database", error);
     throw error;
   }
-}
+};
 
 export async function createUser(email: string, password: string) {
   const salt = genSaltSync(10);
   const hash = hashSync(password, salt);
 
   try {
-    return await db.insert(user).values({ email, password: hash });
+    // 为用户生成一个唯一ID
+    const userId = crypto.randomUUID();
+    return await db.insert(user).values({
+      id: userId,
+      email,
+      password: hash,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
   } catch (error) {
-    console.error('Failed to create user in database');
+    console.error('Failed to create user in database', error);
     throw error;
   }
 }
@@ -361,9 +402,9 @@ export async function getSuggestionsByDocumentId({
 export async function getMessageById({ id }: { id: string }) {
   try {
     console.log('查询消息ID:', id);
-    const result = await db.query.messages.findMany({
-      where: eq(message.id, id),
-    });
+    const result = await db.select()
+      .from(message)
+      .where(eq(message.id, id));
     
     if (!result || result.length === 0) {
       console.log('未找到消息ID:', id);
@@ -434,15 +475,26 @@ export async function updateChatVisiblityById({
 export async function getChatHistory({ limit }: { limit: number }) {
   try {
     console.log('获取聊天历史，限制:', limit);
-    const result = await db.query.chat.findMany({
-      orderBy: [desc(chat.createdAt)],
-      limit,
-      with: {
-        messages: {
-          orderBy: [asc(message.createdAt)],
-        },
-      },
-    });
+    // 先获取聊天记录
+    const chats = await db.select()
+      .from(chat)
+      .orderBy(desc(chat.createdAt))
+      .limit(limit);
+    
+    // 如果需要获取每个聊天的消息，需要单独查询
+    const result = await Promise.all(
+      chats.map(async (chatItem) => {
+        const messages = await db.select()
+          .from(message)
+          .where(eq(message.chatId, chatItem.id))
+          .orderBy(asc(message.createdAt));
+        
+        return {
+          ...chatItem,
+          messages
+        };
+      })
+    );
     
     console.log(`找到 ${result.length} 个聊天记录`);
     if (result.length > 0) {

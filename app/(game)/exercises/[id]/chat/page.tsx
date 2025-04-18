@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { generateUUID } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // 角色数据
 const CHARACTERS = {
@@ -65,6 +66,43 @@ const EXERCISE_DATA = {
   }
 };
 
+// 添加接口定义
+interface Message {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+// 定义步骤状态接口
+interface StepStatus {
+  index: number;
+  completed: boolean;
+  startTime: Date;
+  minTimeRequired: number;
+  aiResponseCount: number;
+  processedMessageIds: Set<string>;
+}
+
+// 使用浏览器原生alert或创建一个简单的提示函数
+const showToast = (message) => {
+  // 可以使用alert作为简单替代
+  // alert(message);
+  
+  // 或者创建一个临时提示元素
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded shadow-md z-50';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    document.body.removeChild(toast);
+  }, 3000);
+  
+  console.warn(message);
+};
+
 export default function GameChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -72,23 +110,33 @@ export default function GameChatPage() {
   const id = params.id as string;
   const characterId = searchParams.get('character');
   
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState<StepStatus>({ 
+    index: 0, 
+    completed: false, 
+    startTime: new Date(),
+    minTimeRequired: 30,
+    aiResponseCount: 0,
+    processedMessageIds: new Set()
+  });
   const [showEmojis, setShowEmojis] = useState(false);
   const [showStepAdvanceHint, setShowStepAdvanceHint] = useState(false);
+  const [hasReceivedAiResponse, setHasReceivedAiResponse] = useState(false);
   
   const messagesEndRef = useRef(null);
   const eventSourceRef = useRef(null);
   const inputRef = useRef(null);
   
-  const exercise = EXERCISE_DATA[id];
-  const character = CHARACTERS[characterId];
+  const exercise = EXERCISE_DATA[id as keyof typeof EXERCISE_DATA];
+  const character = characterId ? CHARACTERS[characterId as keyof typeof CHARACTERS] : null;
   
   // 自动滚动到底部
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
   
   useEffect(() => {
@@ -112,11 +160,47 @@ export default function GameChatPage() {
     if (!isLoading && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === 'assistant') {
-        // 检查AI回复是否包含完成当前步骤的提示
+        setHasReceivedAiResponse(true);
+        
+        // 检查该消息是否已在当前步骤中处理过
+        if (!currentStep.processedMessageIds.has(lastMessage.id)) {
+          // 更新步骤状态，增加计数并记录消息ID
+          setCurrentStep(prev => {
+            const updatedProcessedIds = new Set(prev.processedMessageIds);
+            updatedProcessedIds.add(lastMessage.id);
+            
+            const newCount = prev.aiResponseCount + 1;
+            console.log(`步骤${prev.index+1}的AI响应计数: ${prev.aiResponseCount} -> ${newCount}`);
+            
+            // 如果AI响应次数达到2次或以上，自动将步骤标记为完成
+            const shouldAutoComplete = newCount >= 5;
+            if (shouldAutoComplete && !prev.completed) {
+              console.log(`基于响应次数自动完成步骤${prev.index+1}`);
+              setShowStepAdvanceHint(true);
+            }
+            
+            return {
+              ...prev,
+              aiResponseCount: newCount,
+              processedMessageIds: updatedProcessedIds,
+              completed: prev.completed || shouldAutoComplete // 保持已完成状态或设为完成
+            };
+          });
+        }
+        
+        // 检查是否包含自动进入下一步的关键词
         const content = lastMessage.content.toLowerCase();
+        const autoAdvanceKeywords = ['下一步', '接下来', '继续下一步', '前进到下一步'];
+        const shouldAutoAdvance = autoAdvanceKeywords.some(keyword => 
+          content.includes(keyword)
+        );
+        
+        // 关键词检测，标记步骤完成
         const stepCompleteKeywords = [
           '完成了这一步', '这一步已完成', '进入下一步', 
-          '准备好进入下一步', '可以进入下一步', '下一步是'
+          '准备好进入下一步', '可以进入下一步', '下一步',
+          '完成这一步', '这一步已经完成', '已经完成这一步',
+          '接下来'
         ];
         
         const hasStepCompleteHint = stepCompleteKeywords.some(keyword => 
@@ -124,11 +208,21 @@ export default function GameChatPage() {
         );
         
         if (hasStepCompleteHint) {
+          setCurrentStep(prev => ({...prev, completed: true}));
           setShowStepAdvanceHint(true);
+          
+          // 如果包含自动进入下一步的关键词，且当前步骤不是最后一步，则自动进入下一步
+          if (shouldAutoAdvance && currentStep.index < 4) {
+            // 为了确保状态更新先完成，使用setTimeout延迟执行
+            setTimeout(() => {
+              console.log('检测到自动进入下一步关键词，自动前进...');
+              advanceToNextStep();
+            }, 1500); // 延迟1.5秒，给用户时间阅读当前消息
+          }
         }
       }
     }
-  }, [messages, isLoading]);
+  }, [isLoading, messages, currentStep.processedMessageIds]);
   
   // 在步骤变化时显示指引
   useEffect(() => {
@@ -141,17 +235,29 @@ export default function GameChatPage() {
       "反思一下，应用优势后你的工作感受有什么变化？能量和满足感是否提升？"
     ];
     
-    if (currentStep >= 0 && currentStep < stepGuides.length) {
+    if (currentStep.index >= 0 && currentStep.index < stepGuides.length) {
       // 添加系统引导消息
       setMessages(prev => [...prev, {
         id: generateUUID(),
         role: 'system',
-        content: `## 步骤 ${currentStep + 1}: ${stepGuides[currentStep]}`,
+        content: `## 步骤 ${currentStep.index + 1}: ${stepGuides[currentStep.index]}`,
         createdAt: new Date().toISOString(),
         isGuide: true // 标记为指引消息，可用于特殊样式
       }]);
     }
-  }, [currentStep]);
+  }, [currentStep.index]);
+  
+  // 修改shouldShowNextStepButton的判断，添加日志
+  console.log(`步骤${currentStep.index+1}当前状态: 已完成=${currentStep.completed}, AI响应=${currentStep.aiResponseCount}, 显示下一步按钮=${useMemo(() => {
+    const result = currentStep.completed && currentStep.aiResponseCount >= 2;
+    console.log(`步骤${currentStep.index+1}当前状态: 已完成=${currentStep.completed}, AI响应=${currentStep.aiResponseCount}, 显示下一步按钮=${result}`);
+    return result;
+  }, [currentStep.completed, currentStep.aiResponseCount, currentStep.index])}`);
+  const shouldShowNextStepButton = useMemo(() => {
+    const result = currentStep.completed && currentStep.aiResponseCount >= 2;
+    console.log(`步骤${currentStep.index+1}当前状态: 已完成=${currentStep.completed}, AI响应=${currentStep.aiResponseCount}, 显示下一步按钮=${result}`);
+    return result;
+  }, [currentStep.completed, currentStep.aiResponseCount, currentStep.index]);
   
   // 处理发送消息
   const handleSubmit = async (e) => {
@@ -196,7 +302,7 @@ export default function GameChatPage() {
           messages: messages.concat(userMessage),
           characterId,
           exerciseId: id,
-          currentStep
+          currentStep: currentStep.index
         })
       });
       
@@ -261,8 +367,29 @@ export default function GameChatPage() {
   
   // 添加主动前进到下一步的功能
   const advanceToNextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(prevStep => prevStep + 1);
+    // 只有满足继续条件时才能前进
+    if (!shouldShowNextStepButton) {
+      console.log('条件不满足，无法继续下一步');
+      // 使用替代提示方法
+      toast.error('需要与AI多交流才能继续');
+      return;
+    }
+    
+    if (currentStep.index < 4) {
+      setCurrentStep({
+        index: currentStep.index + 1,
+        completed: false,
+        startTime: new Date(),
+        minTimeRequired: 30,
+        aiResponseCount: 0,
+        processedMessageIds: new Set()
+      });
+      setShowStepAdvanceHint(false);
+      setHasReceivedAiResponse(false);
+    } else {
+      // 最后一步完成，保存练习状态
+      saveExerciseCompletion();
+      router.push(`/exercises/${id}/complete`);
     }
   };
   
@@ -317,19 +444,19 @@ export default function GameChatPage() {
       <div className="bg-white px-6 py-3 border-b border-indigo-100">
         {/* 步骤提示 */}
         <div className="text-xs text-gray-500 mb-2">
-          步骤 {currentStep + 1}/5: 
-          {currentStep === 0 && "列出工作任务"}
-          {currentStep === 1 && "确认性格优势"}
-          {currentStep === 2 && "将优势与任务结合"}
-          {currentStep === 3 && "制定实践计划"}
-          {currentStep === 4 && "反思与总结"}
+          步骤 {currentStep.index + 1}/5: 
+          {currentStep.index === 0 && "列出工作任务"}
+          {currentStep.index === 1 && "确认性格优势"}
+          {currentStep.index === 2 && "将优势与任务结合"}
+          {currentStep.index === 3 && "制定实践计划"}
+          {currentStep.index === 4 && "反思与总结"}
         </div>
         
         {/* 进度条 */}
         <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div 
-            className="bg-indigo-600 h-2.5 rounded-full animate-progress" 
-            style={{ width: `${((currentStep + 1) / 5) * 100}%` }}
+            className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+            style={{ width: `${((currentStep.index + 1) / 5) * 100}%` }}
           ></div>
         </div>
       </div>
@@ -396,37 +523,50 @@ export default function GameChatPage() {
         >
           <div className="bg-white border border-indigo-100 rounded-lg shadow-sm p-4 max-w-md text-center">
             <h3 className="text-sm font-medium text-gray-700 mb-2">
-              {currentStep === 0 && "正在列出工作任务"}
-              {currentStep === 1 && "正在确认性格优势"}
-              {currentStep === 2 && "正在将优势与任务结合"}
-              {currentStep === 3 && "正在制定实践计划"}
-              {currentStep === 4 && "正在反思与总结"}
+              {currentStep.index === 0 && "正在列出工作任务"}
+              {currentStep.index === 1 && "正在确认性格优势"}
+              {currentStep.index === 2 && "正在将优势与任务结合"}
+              {currentStep.index === 3 && "正在制定实践计划"}
+              {currentStep.index === 4 && "正在反思与总结"}
             </h3>
             
             <p className="text-xs text-gray-500 mb-3">
-              {currentStep === 0 && "列出5项你在工作中最常执行的任务"}
-              {currentStep === 1 && "确认你的5大性格优势"}
-              {currentStep === 2 && "为每项任务找到应用优势的方式"}
-              {currentStep === 3 && "制定在日常工作中实践这些新方法的计划"}
-              {currentStep === 4 && "观察能量和满足感的变化"}
+              {currentStep.index === 0 && "列出5项你在工作中最常执行的任务"}
+              {currentStep.index === 1 && "确认你的5大性格优势"}
+              {currentStep.index === 2 && "为每项任务找到应用优势的方式"}
+              {currentStep.index === 3 && "制定在日常工作中实践这些新方法的计划"}
+              {currentStep.index === 4 && "观察能量和满足感的变化"}
             </p>
             
             <div className="flex space-x-2 justify-center">
-              {currentStep > 0 && (
+              {currentStep.index > 0 && (
                 <button
-                  onClick={() => setCurrentStep(prevStep => prevStep - 1)}
+                  onClick={() => setCurrentStep(prevStep => ({
+                    ...prevStep,
+                    index: prevStep.index - 1
+                  }))}
                   className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm hover:bg-gray-200 transition-colors"
                 >
                   上一步
                 </button>
               )}
               
-              {currentStep < 4 && (
+              {currentStep.index < 4 && (
                 <button
                   onClick={advanceToNextStep}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 transition-colors"
+                  className={`px-3 py-1.5 rounded-lg ${
+                    shouldShowNextStepButton 
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  } transition-colors`}
+                  disabled={!shouldShowNextStepButton}
                 >
                   继续下一步
+                  {!shouldShowNextStepButton && currentStep.aiResponseCount > 0 && 
+                    <span className="text-xs ml-1">
+                      (需要再交流{Math.max(0, 2 - currentStep.aiResponseCount)}次)
+                    </span>
+                  }
                 </button>
               )}
             </div>
@@ -494,36 +634,36 @@ export default function GameChatPage() {
       </div>
       
       {/* 显示步骤推进提示 */}
-      {showStepAdvanceHint && currentStep < 4 && (
+      {showStepAdvanceHint && shouldShowNextStepButton && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-green-500 to-teal-600 text-white p-4 rounded-lg shadow-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 rounded-lg shadow-md"
         >
-          <div className="flex items-center">
-            <div className="mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center space-x-3">
+            <div className="bg-white/20 rounded-full p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <div>
-              <p className="text-sm font-medium">看起来你已完成这一步！</p>
-              <button 
-                onClick={() => {
-                  advanceToNextStep();
-                  setShowStepAdvanceHint(false);
-                }}
-                className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded mt-1 transition-colors"
-              >
-                继续下一步
-              </button>
-            </div>
+            <p className="text-sm font-medium">步骤已完成</p>
           </div>
         </motion.div>
       )}
       
+      {/* 如果AI响应数不足也使用相同色系 */}
+      {showStepAdvanceHint && currentStep.completed && hasReceivedAiResponse && currentStep.aiResponseCount < 2 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-indigo-400 to-purple-500 text-white p-3 rounded-lg shadow-md"
+        >
+          <p className="text-sm font-medium">再多交流一次就可以进入下一步啦</p>
+        </motion.div>
+      )}
+      
       {/* 在最后步骤时显示完成奖励 */}
-      {currentStep === 4 && messages.length > 5 && (
+      {currentStep.index === 4 && messages.length > 5 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
