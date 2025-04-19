@@ -444,7 +444,12 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('================== 请求处理出错 ==================');
     console.error('错误详情:', error);
-    console.error('堆栈:', error.stack);
+    // 使用类型守卫检查error是否为Error类型
+    if (error instanceof Error) {
+      console.error('堆栈:', error.stack);
+    } else {
+      console.error('无法获取堆栈信息，error不是标准Error对象');
+    }
     return new Response('处理请求时出错', {
       status: 500,
     });
