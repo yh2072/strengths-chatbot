@@ -3,7 +3,7 @@ import { auth } from '@/app/(auth)/auth';
 import ClientGameLayout from '@/components/game/client-game-layout';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
-import { user } from '@/lib/db/schema';
+import { User } from '@/lib/db/schema';
 import { LogoutButton } from '@/components/ui/logout-button';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -31,8 +31,8 @@ export default async function GameLayout({
   try {
     // 尝试获取最新用户数据包括积分
     const dbUser = await db.select()
-      .from(user)
-      .where(eq(user.id, session.user.id))
+      .from(User)
+      .where(eq(User.id, session.user.id))
       .execute();
     
     if (dbUser.length > 0) {
