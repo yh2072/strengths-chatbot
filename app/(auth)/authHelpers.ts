@@ -1,4 +1,4 @@
-export function storeUserInfo(user) {
+export function storeUserInfo(user: any) {
   // 检查输出，看看用户对象
   console.log('存储用户信息:', user);
   
