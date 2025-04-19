@@ -3,7 +3,7 @@ import { auth } from '@/app/(auth)/auth';
 import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { eq, and } from 'drizzle-orm';
-import { userExercises, user } from '@/lib/db/schema';
+import { userExercises, User } from '@/lib/db/schema';
 
 // 定义不同练习的奖励积分
 const EXERCISE_POINTS = {
@@ -115,9 +115,9 @@ export async function POST(request: NextRequest) {
       // 查询更新后的用户积分
       let updatedUser;
       try {
-        updatedUser = await db.select({ points: user.points })
-          .from(user)
-          .where(eq(user.id, userId))
+        updatedUser = await db.select({ points: User.points })
+          .from(User)
+          .where(eq(User.id, userId))
           .execute();
         
         console.log('更新后的用户数据:', updatedUser);
@@ -175,9 +175,9 @@ export async function POST(request: NextRequest) {
       // 查询更新后的用户积分
       let updatedUser;
       try {
-        updatedUser = await db.select({ points: user.points })
-          .from(user)
-          .where(eq(user.id, userId))
+        updatedUser = await db.select({ points: User.points })
+          .from(User)
+          .where(eq(User.id, userId))
           .execute();
         
         console.log('更新后的用户数据:', updatedUser);

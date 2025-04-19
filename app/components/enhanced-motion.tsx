@@ -2,9 +2,10 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion as framerMotion, AnimatePresence as framerAnimatePresence, useMotionValue } from 'framer-motion';
+import { forwardRef } from 'react';
 
 // 安全的动画元素包装器
-export const SafeMotionDiv = React.forwardRef(({ children, ...props }, ref) => {
+export const SafeMotionDiv = forwardRef(({ children, ...props }, ref) => {
   const elementRef = useRef(null);
   
   useEffect(() => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import ChatUI from '@/components/chat-ui';
+import { ChatUI } from '@/components/chat-ui/index';
 import { generateUUID } from '@/lib/utils';
 
 export default function ClientChat({ id, selectedModel }) {

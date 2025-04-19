@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/app/(auth)/auth';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
-import { user } from '@/lib/db/schema';
+import { User } from '@/lib/db/schema';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     
     // 从数据库获取最新用户数据
     const userData = await db.select()
-      .from(user)
-      .where(eq(user.id, session.user.id))
+      .from(User)
+      .where(eq(User.id, session.user.id))
       .execute();
     
     if (userData.length === 0) {

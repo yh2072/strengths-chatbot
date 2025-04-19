@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { db } from '@/lib/db';
-import { user } from '@/lib/db/schema';
+import { User } from '@/lib/db/schema';
 import crypto from 'crypto';
 
 export async function POST(request: Request) {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const userId = crypto.randomUUID();
     
     // 插入新用户
-    await db.insert(user).values({
+    await db.insert(User).values({
       id: userId,
       name,  // 添加名字
       email,
