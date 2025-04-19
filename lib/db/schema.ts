@@ -15,7 +15,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-export type User = {
+export type UserType = {
   id: string;
   email: string;
   password?: string;
@@ -25,7 +25,7 @@ export type User = {
   updatedAt?: Date;
 };
 
-export const user = pgTable("User", {
+export const User = pgTable("User", {
   id: varchar('id', { length: 255 }).primaryKey(),
   email: varchar('email', { length: 255 }).notNull(),
   password: varchar('password', { length: 255 }),
@@ -36,7 +36,7 @@ export const user = pgTable("User", {
   updated_at: timestamp('updated_at', { mode: 'string' })
 });
 
-export type User = InferSelectModel<typeof user>;
+export type User = InferSelectModel<typeof User>;
 
 export const chat = pgTable('Chat', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -44,7 +44,7 @@ export const chat = pgTable('Chat', {
   title: text('title').notNull(),
   userId: uuid('userId')
     .notNull()
-    .references(() => user.id),
+    .references(() => User.id),
   visibility: varchar('visibility', { enum: ['public', 'private'] })
     .notNull()
     .default('private'),
@@ -133,7 +133,7 @@ export const document = pgTable(
       .default('text'),
     userId: uuid('userId')
       .notNull()
-      .references(() => user.id),
+      .references(() => User.id),
   },
   (table) => {
     return {
@@ -156,7 +156,7 @@ export const suggestion = pgTable(
     isResolved: boolean('isResolved').notNull().default(false),
     userId: uuid('userId')
       .notNull()
-      .references(() => user.id),
+      .references(() => User.id),
     createdAt: timestamp('createdAt').notNull(),
   },
   (table) => ({
@@ -172,7 +172,7 @@ export type Suggestion = InferSelectModel<typeof suggestion>;
 
 export const userExercises = pgTable("user_exercises", {
   id: serial("id").primaryKey(),
-  userId: uuid("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => User.id, { onDelete: "cascade" }),
   exerciseId: text("exercise_id").notNull(),
   completedAt: timestamp("completed_at").notNull(),
   lastAttemptedAt: timestamp("last_attempted_at").notNull(),
