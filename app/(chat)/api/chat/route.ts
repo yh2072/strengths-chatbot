@@ -398,6 +398,12 @@ export async function POST(request: Request) {
     // 启动一个非阻塞任务来保存响应
     (async () => {
       try {
+        // 添加安全检查
+        if (!session || !session.user || !session.user.id) {
+          console.error('会话用户ID为空，无法保存响应');
+          return;
+        }
+        
         await saveAIResponse(originalResponse, id, session.user.id);
         console.log('保存响应任务完成');
       } catch (e) {
