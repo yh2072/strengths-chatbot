@@ -93,7 +93,7 @@ export default function CharacterSelectPage({ params }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto pt-8 pb-16 px-4 sm:px-6 relative">
+    <div className="max-w-6xl mx-auto pt-8 pb-20 px-4 sm:px-6 relative">
       {/* 背景装饰 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-20 -right-20 w-80 h-80 rounded-full bg-purple-300/10 mix-blend-multiply filter blur-3xl"></div>
@@ -121,7 +121,7 @@ export default function CharacterSelectPage({ params }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="text-center mb-10 relative z-10"
+        className="text-center mb-6 relative z-10"
       >
         <div className="inline-block mb-3 px-4 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full text-sm font-medium text-indigo-700 border border-indigo-100 shadow-sm">
           选择你的引导者
@@ -134,118 +134,77 @@ export default function CharacterSelectPage({ params }) {
         </p>
       </motion.div>
       
-      {/* 角色选择区域 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12 relative z-10">
-        {CHARACTERS.map((character, index) => (
-          <motion.div
-            key={character.id}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-            onClick={() => handleSelectCharacter(character)}
-            onMouseEnter={() => setIsHovering(character.id)}
-            onMouseLeave={() => setIsHovering(null)}
-            className={`bg-white rounded-2xl shadow-lg border-2 ${
-              selectedCharacter?.id === character.id 
-                ? `border-2 ${character.borderColor} shadow-xl transform scale-[1.02]` 
-                : 'border-transparent hover:border-indigo-100'
-            } overflow-hidden transition-all duration-300 cursor-pointer relative`}
-          >
-            {/* 角色头部 */}
-            <div className={`bg-gradient-to-r ${character.color} p-6 relative h-48 flex items-center justify-center overflow-hidden`}>
-              {/* 背景装饰 - 静态版本 */}
-              <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                <div className="absolute top-5 right-5 w-20 h-20 rounded-full bg-white/10"></div>
-                <div className="absolute bottom-10 left-10 w-16 h-16 rounded-full bg-white/10"></div>
-                <div className="absolute top-1/2 left-1/4 w-12 h-12 rounded-full bg-white/10"></div>
+      {/* 角色选择区域 - 调整卡片比例为3:4 */}
+      <div className="overflow-x-auto pb-10 pt-4 hide-scrollbar">
+        <div className="flex justify-center px-4 min-w-max space-x-6 sm:space-x-8">
+          {CHARACTERS.map((character, index) => (
+            <motion.div
+              key={character.id}
+              initial={{ scale: 1 }}
+              animate={{ 
+                scale: selectedCharacter?.id === character.id ? 1.08 : 1,
+                zIndex: selectedCharacter?.id === character.id ? 10 : 1
+              }}
+              whileHover={{ scale: selectedCharacter?.id === character.id ? 1.08 : 1.04 }}
+              whileTap={{ scale: selectedCharacter?.id === character.id ? 1.05 : 0.98 }}
+              transition={{ duration: 0.3 }}
+              className={`relative flex-shrink-0 w-[240px] sm:w-[280px] aspect-[3/4] flex flex-col rounded-xl border-2 cursor-pointer transition-all ${
+                selectedCharacter?.id === character.id 
+                  ? 'border-indigo-500 bg-gradient-to-b from-indigo-50/90 to-purple-50/90 shadow-lg transform' 
+                  : 'border-gray-200 hover:border-indigo-200 bg-white/90'
+              } backdrop-blur-sm`}
+              onClick={() => handleSelectCharacter(character)}
+            >
+              {/* 头像和名称放在顶部 */}
+              <div className="flex-none p-3 sm:p-4">
+                <div className="flex flex-col items-center mb-2 sm:mb-3">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-indigo-100 mb-2 sm:mb-3 shadow-md">
+                    <Image 
+                      src={character.imagePath} 
+                      alt={character.name}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800 text-center">{character.name}</h3>
+                  <div className="text-xs text-indigo-600 font-medium text-center">{character.title}</div>
+                </div>
               </div>
               
-              {/* 角色图像 - 根据类型显示emoji或图片 */}
-              {character.useImage ? (
-                <div className="relative w-38 h-28 z-10 transform transition-transform duration-300 hover:scale-110 -mt-4">
-                  <Image 
-                    src={character.imagePath} 
-                    alt={character.name}
-                    width={112}
-                    height={112}
-                    className="object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="text-7xl relative z-10 transform transition-transform duration-300 hover:scale-110">
-                  {character.emoji}
-                </div>
-              )}
-              
-              {/* 选中标记 */}
-              {selectedCharacter?.id === character.id && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className="absolute top-4 right-4 bg-white rounded-full p-1 shadow-md"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </motion.div>
-              )}
-            </div>
-            
-            {/* 角色信息 */}
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                {character.name}
-                <span className="text-sm font-normal text-gray-500 ml-2">- {character.title}</span>
-              </h3>
-              
-              <div className="mb-4">
-                <div className="text-sm text-gray-500 mb-1">性格特点</div>
-                <div className="text-gray-700">{character.personality}</div>
-              </div>
-              
-              <p className="text-gray-600 mb-4 text-sm">
-                {character.description}
-              </p>
-              
-              <div className="space-y-1">
-                <div className="text-sm text-gray-500">擅长领域</div>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {character.strengths.map((strength, i) => (
-                    <span 
-                      key={i} 
-                      className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r ${character.lightColor} border ${character.borderColor}`}
-                    >
+              {/* 描述放在中间，允许滚动 */}
+              <div className="flex-1 px-3 sm:px-4 overflow-y-auto hide-scrollbar">
+                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
+                  {character.description}
+                </p>
+                
+                {/* 显示角色特长 */}
+                <div className="mt-2 sm:mt-3 flex flex-wrap gap-1">
+                  {character.strengths.slice(0, 2).map((strength, idx) => (
+                    <span key={idx} className="inline-block px-2 py-1 text-xs bg-indigo-50 text-indigo-600 rounded-full">
                       {strength}
                     </span>
                   ))}
                 </div>
               </div>
-            </div>
-            
-            {/* 角色名言 - 选中时显示 */}
-            <AnimatePresence>
-              {showQuote && selectedCharacter?.id === character.id && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-r ${character.bgColor} backdrop-blur-sm border-t ${character.borderColor}`}
-                >
-                  <div className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500 mr-2 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              
+              {/* 选中指示器放在底部 */}
+              <div className="flex-none p-3 sm:p-4 pt-0 flex justify-center">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  selectedCharacter?.id === character.id 
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                    : 'bg-gray-100 border border-gray-200'
+                }`}>
+                  {selectedCharacter?.id === character.id && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    <p className="text-sm italic text-gray-700">{character.quote}</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))}
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
       
       {/* 底部操作区 */}
@@ -253,7 +212,7 @@ export default function CharacterSelectPage({ params }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.6 }}
-        className="text-center relative z-10"
+        className="text-center relative z-10 mt-2"
       >
         <motion.button
           whileHover={selectedCharacter ? { scale: 1.05 } : {}}

@@ -25,28 +25,17 @@ export default function RegisterPage() {
   );
 
   useEffect(() => {
-    if (state.status === 'failed') {
-      toast({
-        type: 'error',
-        description: state.reason || '注册失败',
-      });
-    } else if (state.status === 'invalid_data') {
-      toast({
-        type: 'error',
-        description: '输入数据验证失败',
-      });
-    } else if (state.status === 'success') {
-      setIsSuccessful(true);
-      toast({
-        type: 'success',
-        description: '注册成功! 正在跳转...',
-      });
-      setTimeout(() => {
-        router.refresh();
-        router.push('/login');
-      }, 1500);
+    if (state.status === 'success') {
+      router.push('/');
     }
-  }, [state.status, router]);
+    
+    if (state.status === 'error') {
+      toast({
+        type: 'error',
+        description: state.message || '注册失败',
+      });
+    }
+  }, [state.status, state.message, router]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);

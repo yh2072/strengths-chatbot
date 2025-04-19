@@ -34,9 +34,9 @@ export default function ClientGameLayout({ children, session }) {
             <div className="flex">
               <Link href="/" className="flex items-center">
                 <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  优能
+                  夸夸星球
                 </span>
-                <span className="text-sm text-indigo-600 ml-1 hidden sm:inline">StrengthLab</span>
+                <span className="text-sm text-indigo-600 ml-1 hidden sm:inline">StrengthPlanet</span>
               </Link>
             </div>
             

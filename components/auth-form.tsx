@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Form from 'next/form';
+import { useActionState } from 'react';
 
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -12,6 +13,10 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ action, children, defaultEmail = '', isRegister = false }: AuthFormProps) {
+  const [email, setEmail] = useState(defaultEmail);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
   return (
     <Form action={action} className="space-y-4">
       <div>

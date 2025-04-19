@@ -15,6 +15,7 @@ import {
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import crypto from 'crypto';
+import { sql } from '@vercel/postgres';
 
 import {
   user,
@@ -71,30 +72,42 @@ export function serverOnlyFunction2() {
 
 export const getUser = async (email: string) => {
   try {
-    const result = await db.select().from(user).where(eq(user.email, email));
-    return result;
+    const result = await sql`SELECT * FROM "User" WHERE email=${email}`;
+    return result.rows;
   } catch (error) {
-    console.error("Failed to get user from database", error);
+    console.error('获取用户失败:', error);
     throw error;
   }
 };
 
 export async function createUser(email: string, password: string) {
-  const salt = genSaltSync(10);
-  const hash = hashSync(password, salt);
-
   try {
-    // 为用户生成一个唯一ID
+    const hashedPassword = await hashSync(password, 10);
+    
+    // 生成一个 UUID 作为用户 ID
     const userId = crypto.randomUUID();
-    return await db.insert(user).values({
-      id: userId,
-      email,
-      password: hash,
-      created_at: new Date(),
-      updated_at: new Date()
-    });
+    
+    // 确保日期是字符串
+    const createdAt = new Date().toISOString();
+    const updatedAt = createdAt; // 初始时更新时间与创建时间相同
+    
+    // 修改插入语句，添加 id、points、level 和 updated_at 字段
+    return await sql`
+      INSERT INTO "User" (id, email, password, points, level, created_at, updated_at, name)
+      VALUES (${userId}, ${email}, ${hashedPassword}, 0, 1, ${createdAt}, ${updatedAt}, null)
+      RETURNING id, email, created_at
+    `;
   } catch (error) {
-    console.error('Failed to create user in database', error);
+    // 提供更详细的错误信息
+    console.error('创建用户失败:', error);
+    
+    // 打印更多错误诊断信息
+    if (error instanceof Error) {
+      console.error('错误类型:', error.constructor.name);
+      console.error('错误消息:', error.message);
+      console.error('错误堆栈:', error.stack);
+    }
+    
     throw error;
   }
 }
@@ -505,5 +518,19 @@ export async function getChatHistory({ limit }: { limit: number }) {
   } catch (error) {
     console.error('获取聊天历史出错:', error);
     return [];
+  }
+}
+
+// 添加通过邮箱查询用户的功能
+export async function getUserByEmail(email: string) {
+  try {
+    // 使用sql查询来获取用户
+    const result = await sql`
+      SELECT * FROM "User" WHERE email = ${email}
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('通过邮箱查询用户失败:', error);
+    throw error;
   }
 }
