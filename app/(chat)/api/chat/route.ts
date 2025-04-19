@@ -124,8 +124,8 @@ export async function POST(request: Request) {
           );
           
           if (textKeys.length > 0) {
-            console.log('找到可能的文本属性:', textKeys[0], part[textKeys[0]]);
-            return part[textKeys[0]];
+            console.log('找到可能的文本属性:', textKeys[0], (part as any)[textKeys[0]]);
+            return (part as any)[textKeys[0]];
           }
           
           // 最后尝试转为JSON
