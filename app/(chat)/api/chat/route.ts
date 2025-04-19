@@ -295,6 +295,11 @@ export async function POST(request: Request) {
         const responseClone = response.clone();
         
         // 读取完整响应内容
+        if (!responseClone.body) {
+          console.error('响应体为空');
+          return false;
+        }
+        
         const reader = responseClone.body.getReader();
         const decoder = new TextDecoder();
         let fullContent = '';
