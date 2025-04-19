@@ -108,7 +108,7 @@ export async function POST(request: Request) {
         if (typeof part === 'string') return part;
         if (part && typeof part === 'object') {
           // 处理可能的文本对象
-          if (part.text) {
+          if ('text' in part && part.text) {
             console.log('找到text类型:', part.text);
             return part.text;
           }
