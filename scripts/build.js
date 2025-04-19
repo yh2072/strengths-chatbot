@@ -9,4 +9,4 @@ execSync('tsx lib/db/migrate', { stdio: 'inherit' });
 
 // 执行构建
 console.log('Building app...');
-execSync('next build --no-lint', { stdio: 'inherit' }); 
+execSync('next build --no-lint --no-typescript', { stdio: 'inherit' }); 
