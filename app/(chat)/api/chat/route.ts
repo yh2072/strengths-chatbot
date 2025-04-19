@@ -289,7 +289,7 @@ export async function POST(request: Request) {
     }
 
     // 改进的AI响应保存函数
-    async function saveAIResponse(response, chatId, sessionUserId) {
+    async function saveAIResponse(response: Response, chatId: string, sessionUserId: string) {
       try {
         // 创建一个新的响应副本
         const responseClone = response.clone();
