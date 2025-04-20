@@ -4,13 +4,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useState, Suspense } from 'react';
 import { toast } from '@/components/toast';
+import dynamic from 'next/dynamic';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
-import LottieAnimation from '@/components/lottie-animation';
 
 import { login, type LoginActionState } from '../actions';
 import { storeUserInfo } from '@/app/actions/auth';
+
+// 动态导入Lottie组件，禁用SSR
+const LottieAnimation = dynamic(
+  () => import('@/components/lottie-animation'),
+  { ssr: false }  // 关键修复：禁用服务器端渲染
+);
 
 export default function LoginPage() {
   const router = useRouter();
@@ -76,12 +82,12 @@ export default function LoginPage() {
             </div>
             
             <div className="relative w-40 h-40 my-4">
-              <Suspense fallback={<div className="w-40 h-40 bg-indigo-300/50 rounded-full animate-pulse"></div>}>
+              {typeof window !== 'undefined' && (
                 <LottieAnimation 
                   animationPath="/animations/easter.json" 
                   className="w-full h-full"
                 />
-              </Suspense>
+              )}
             </div>
             
             <h2 className="text-xl font-bold mb-2 text-center">治愈系成长助手</h2>
