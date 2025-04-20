@@ -122,7 +122,7 @@ ${currentStep === 4 ? "引导用户观察能量和满足感的变化" : ""}
       top_p: 0.7,
       top_k: 50,
       frequency_penalty: 0.5,
-      max_tokens: 100,
+      max_tokens: 150,
       stream: true // 启用流式响应
     };
     
