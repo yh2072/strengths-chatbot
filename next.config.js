@@ -6,9 +6,11 @@ const nextConfig = {
   reactStrictMode: true,
   compiler: {
     // 禁用React服务器组件，解决文档问题
-    // 仅在遇到问题的路由上禁用SSR
     styledComponents: true,
-  }
+  },
+  
+  // 禁用预渲染特定页面
+  // unstable_excludeFiles: ['**/login**', '**/register**']
 }
 
 module.exports = nextConfig 

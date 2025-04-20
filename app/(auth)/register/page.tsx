@@ -2,14 +2,19 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState, Suspense } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { toast } from '@/components/toast';
+import dynamic from 'next/dynamic';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
-import LottieAnimation from '@/components/lottie-animation';
 
 import { register, type RegisterActionState } from '../actions';
+
+const LottieAnimation = dynamic(
+  () => import('@/components/lottie-animation'),
+  { ssr: false }
+);
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -65,12 +70,12 @@ export default function RegisterPage() {
             </div>
             
             <div className="relative w-40 h-40 my-4">
-              <Suspense fallback={<div className="w-40 h-40 bg-purple-300/50 rounded-full animate-pulse"></div>}>
+              {typeof window !== 'undefined' && (
                 <LottieAnimation 
-                  animationPath="/animations/easter2.json" 
+                  animationPath="/animations/register.json" 
                   className="w-full h-full"
                 />
-              </Suspense>
+              )}
             </div>
             
             <h2 className="text-xl font-bold mb-2 text-center">解锁你的隐藏潜能</h2>

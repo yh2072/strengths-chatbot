@@ -17,28 +17,38 @@ export default function LottieAnimation({
   const [isLoaded, setIsLoaded] = useState(false);
   
   useEffect(() => {
+    // 安全检查：确保在浏览器环境中
+    if (typeof window === 'undefined') return;
+    
     let anim: AnimationItem | undefined;
     if (container.current) {
-      anim = lottie.loadAnimation({
-        container: container.current,
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        path: animationPath,
-        rendererSettings: {
-          preserveAspectRatio: 'xMidYMid slice'
-        }
-      });
-      
-      anim.addEventListener('DOMLoaded', () => {
-        setIsLoaded(true);
-      });
+      try {
+        anim = lottie.loadAnimation({
+          container: container.current,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: animationPath,
+          rendererSettings: {
+            preserveAspectRatio: 'xMidYMid slice'
+          }
+        });
+        
+        anim.addEventListener('DOMLoaded', () => {
+          setIsLoaded(true);
+        });
+      } catch (error) {
+        console.error('Lottie animation error:', error);
+      }
     }
     
     return () => {
       if (anim) anim.destroy();
     };
   }, [animationPath]);
+  
+  // 安全返回：在服务器端不渲染内容
+  if (typeof window === 'undefined') return null;
   
   return (
     <div 
