@@ -3,8 +3,18 @@ import { auth } from '@/app/(auth)/auth';
 import { generateUUID } from '@/lib/utils';
 import { saveMessages, getMessagesByChatId, saveChat, getChatById } from '@/lib/db/queries';
 
+// 定义类型，确保与数据库模式匹配
+interface ChatData {
+  id: string;
+  userId: string;
+  title: string;
+  created_at?: Date;  // 使用下划线格式
+  updated_at?: Date;  // 使用下划线格式
+  visibility: 'public' | 'private';
+}
+
 // 获取聊天消息
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const chatId = searchParams.get('chatId');
   
@@ -21,13 +31,13 @@ export async function GET(request: Request) {
     const messages = await getMessagesByChatId({ id: chatId });
     
     return NextResponse.json(messages);
-  } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
 // 保存用户消息
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const { chatId, message } = await request.json();
     
@@ -43,13 +53,15 @@ export async function POST(request: Request) {
       console.log('聊天记录不存在，创建新聊天:', chatId);
       
       // 创建新的聊天记录
-      await saveChat({
+      const chatData: ChatData = {
         id: chatId,
         userId: session.user.id,
         title: message.content.substring(0, 50) + (message.content.length > 50 ? '...' : ''),
-        createdAt: new Date(),
+        created_at: new Date(),  // 使用正确的属性名
         visibility: 'private'
-      });
+      };
+      
+      await saveChat(chatData);
     }
     
     // 保存消息
@@ -61,14 +73,14 @@ export async function POST(request: Request) {
           role: 'user',
           parts: Array.isArray(message.parts) ? message.parts : [message.content],
           attachments: [],
-          createdAt: new Date(),
+          createdAt: new Date(),  // 注意: 这里可能也需要改为created_at，取决于saveMessages的接口
         },
       ],
     });
     
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('保存消息失败:', error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 } 

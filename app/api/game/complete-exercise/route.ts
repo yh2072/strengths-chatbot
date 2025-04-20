@@ -5,16 +5,17 @@ import { sql } from 'drizzle-orm';
 import { eq, and } from 'drizzle-orm';
 import { userExercises, User } from '@/lib/db/schema';
 
-// 定义不同练习的奖励积分
-const EXERCISE_POINTS = {
+// 定义不同练习的奖励积分，使用Record类型
+const EXERCISE_POINTS: Record<string, number> = {
   'strengths-alignment': 50,
-  // 其他练习奖励可以在这里定义
+  // 可以添加其他练习的积分
 };
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log('=== 练习完成API请求信息 ===');
   console.log('请求方法:', request.method);
   console.log('请求头:', Object.fromEntries(request.headers.entries()));
+  
   try {
     const reqText = await request.clone().text();
     console.log('请求体:', reqText);
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
     
     const userId = session.user.id;
-    let exerciseId;
+    let exerciseId: string;
     let isClaim = false; // 是否是领取奖励的请求
     
     try {
@@ -76,10 +77,10 @@ export async function POST(request: NextRequest) {
         .execute();
       
       console.log('现有练习记录查询结果:', existingExercise);
-    } catch (dbError) {
+    } catch (dbError: unknown) {
       console.error('查询练习记录失败:', dbError);
       return NextResponse.json(
-        { error: '数据库查询失败', details: dbError.message },
+        { error: '数据库查询失败', details: dbError instanceof Error ? dbError.message : String(dbError) },
         { status: 500 }
       );
     }
@@ -98,8 +99,8 @@ export async function POST(request: NextRequest) {
     if (existingExercise && existingExercise.length > 0) {
       console.log('练习已被完成过，但仍将给予奖励');
       
-      // 更新用户积分
-      const pointsToAdd = EXERCISE_POINTS[exerciseId] || 50;
+      // 安全地获取积分
+      const pointsToAdd = exerciseId in EXERCISE_POINTS ? EXERCISE_POINTS[exerciseId] : 50;
       
       try {
         await db.execute(
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
       }
       
       // 增加用户积分
-      const pointsToAdd = EXERCISE_POINTS[exerciseId] || 50; // 使用默认50积分
+      const pointsToAdd = exerciseId in EXERCISE_POINTS ? EXERCISE_POINTS[exerciseId] : 50;
       
       console.log(`添加积分: ${pointsToAdd}`);
       
@@ -198,10 +199,10 @@ export async function POST(request: NextRequest) {
       });
     }
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('保存练习完成状态失败:', error);
     return NextResponse.json(
-      { error: '服务器错误', details: error.message },
+      { error: '服务器错误', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

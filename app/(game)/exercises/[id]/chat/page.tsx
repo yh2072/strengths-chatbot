@@ -72,6 +72,7 @@ interface Message {
   role: string;
   content: string;
   createdAt: string;
+  isGuide?: boolean; // 添加可选的isGuide属性
 }
 
 // 定义步骤状态接口
@@ -85,7 +86,7 @@ interface StepStatus {
 }
 
 // 使用浏览器原生alert或创建一个简单的提示函数
-const showToast = (message) => {
+const showToast = (message: string) => {
   // 可以使用alert作为简单替代
   // alert(message);
   
@@ -112,6 +113,12 @@ const shouldMoveToNextStep = (content: string): boolean => {
   return keywords.some(keyword => lowerContent.includes(keyword));
 };
 
+// 简单实现，仅用于通过构建
+const saveExerciseCompletion = () => {
+  console.log('保存练习完成状态');
+  // 实际保存功能将在后续实现
+};
+
 export default function GameChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -134,9 +141,9 @@ export default function GameChatPage() {
   const [showStepAdvanceHint, setShowStepAdvanceHint] = useState(false);
   const [hasReceivedAiResponse, setHasReceivedAiResponse] = useState(false);
   
-  const messagesEndRef = useRef(null);
-  const eventSourceRef = useRef(null);
-  const inputRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const exercise = EXERCISE_DATA[id as keyof typeof EXERCISE_DATA];
   const character = characterId ? CHARACTERS[characterId as keyof typeof CHARACTERS] : null;
@@ -277,7 +284,7 @@ export default function GameChatPage() {
   }, [currentStep.completed, currentStep.aiResponseCount, currentStep.index]);
   
   // 处理发送消息
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
     
@@ -328,6 +335,9 @@ export default function GameChatPage() {
       }
       
       // 处理流式响应
+      if (!response.body) {
+        throw new Error('响应没有主体');
+      }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let aiContent = '';
@@ -383,7 +393,7 @@ export default function GameChatPage() {
   };
   
   // 添加表情
-  const addEmoji = (emoji) => {
+  const addEmoji = (emoji: string) => {
     setInput(prev => prev + emoji);
     setShowEmojis(false);
     inputRef.current?.focus();

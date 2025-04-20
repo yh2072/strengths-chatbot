@@ -36,15 +36,18 @@ const EXERCISE_DATA = {
   }
 };
 
+// 在页面顶部添加类型保护函数
+function isValidExerciseId(id: string): id is keyof typeof EXERCISE_DATA {
+  return id in EXERCISE_DATA;
+}
+
 export default function ExercisePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const exercise = EXERCISE_DATA[id];
-  const [isHovering, setIsHovering] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   
-  if (!exercise) {
+  // 使用类型保护
+  if (!isValidExerciseId(id)) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-red-100 max-w-md">
@@ -59,6 +62,10 @@ export default function ExercisePage() {
       </div>
     );
   }
+  
+  const exercise = EXERCISE_DATA[id as keyof typeof EXERCISE_DATA];
+  const [isHovering, setIsHovering] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   
   return (
     <div className="max-w-6xl mx-auto pt-8 pb-16 px-4 sm:px-6">

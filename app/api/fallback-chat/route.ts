@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/app/(auth)/auth';
 import { systemPrompt } from '@/lib/ai/prompts';
 
-export async function POST(req: Request) {
+// 定义消息类型接口
+interface Message {
+  role: string;
+  content?: string | Array<{type: string; text: string}>;
+  parts?: string[];
+  [key: string]: any; // 允许其他属性
+}
+
+export async function POST(req: Request): Promise<NextResponse | Response> {
   try {
     const body = await req.json();
     const { messages, chatId, selectedChatModel } = body;
@@ -22,8 +30,8 @@ export async function POST(req: Request) {
       content: systemPrompt({ selectedChatModel })
     });
     
-    // 提取最后一条用户消息
-    const userMsg = messages.find(m => m.role === 'user');
+    // 提取最后一条用户消息 - 添加类型注解
+    const userMsg = messages.find((m: Message) => m.role === 'user');
     if (userMsg) {
       let content = '';
       
@@ -31,8 +39,8 @@ export async function POST(req: Request) {
         content = userMsg.content;
       } else if (Array.isArray(userMsg.content)) {
         content = userMsg.content
-          .filter(item => item && item.type === 'text')
-          .map(item => item.text)
+          .filter((item: any) => item && item.type === 'text')
+          .map((item: any) => item.text)
           .join('\n');
       } else if (Array.isArray(userMsg.parts)) {
         content = userMsg.parts.join('\n');
@@ -62,6 +70,11 @@ export async function POST(req: Request) {
       })
     });
     
+    // 检查响应体
+    if (!response.body) {
+      throw new Error('API响应没有响应体');
+    }
+    
     // 转发响应
     return new Response(response.body, {
       headers: {
@@ -70,7 +83,7 @@ export async function POST(req: Request) {
         'Connection': 'keep-alive'
       }
     });
-  } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 } 

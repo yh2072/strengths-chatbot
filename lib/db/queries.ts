@@ -18,16 +18,15 @@ import crypto from 'crypto';
 import { sql } from '@vercel/postgres';
 
 import {
-  user,
+  User,
   chat,
-  type User,
+  type User as UserType,
   document,
   type Suggestion,
   suggestion,
   message,
   vote,
   type DBMessage,
-  type Chat,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 
@@ -534,3 +533,13 @@ export async function getUserByEmail(email: string) {
     throw error;
   }
 }
+
+// 直接在文件中定义Chat类型
+type Chat = {
+  id: string;
+  createdAt: Date;
+  userId: string;
+  title: string;
+  visibility?: 'public' | 'private';
+  [key: string]: any;
+};

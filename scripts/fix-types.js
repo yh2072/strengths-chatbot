@@ -26,38 +26,82 @@ function findTypeScriptFiles(dir, fileList = []) {
 function fixTypeErrors(filePath) {
   let content = fs.readFileSync(filePath, 'utf8');
   
-  // 修复 showToast 函数
+  // 修复各种可能无类型的函数参数
   content = content.replace(
-    /const showToast = \(message\) =>/g, 
-    'const showToast = (message: string) =>'
+    /const\s+(\w+)\s*=\s*\(([^)]*)\)\s*=>/g,
+    function(match, funcName, params) {
+      // 如果参数已经有类型注解，保持不变
+      if (params.includes(':')) return match;
+      
+      // 处理每个参数
+      const newParams = params.split(',').map(param => {
+        param = param.trim();
+        if (!param || param.includes(':')) return param;
+        return `${param}: any`;
+      }).join(', ');
+      
+      return `const ${funcName} = (${newParams}) =>`;
+    }
   );
   
-  // 修复其他常见问题
+  // 函数声明的参数也要处理
   content = content.replace(
-    /const handleSubmit = async \(e\) =>/g, 
-    'const handleSubmit = async (e: React.FormEvent) =>'
-  );
-  
-  content = content.replace(
-    /const addEmoji = \(emoji\) =>/g, 
-    'const addEmoji = (emoji: string) =>'
+    /function\s+(\w+)\s*\(([^)]*)\)/g,
+    function(match, funcName, params) {
+      if (params.includes(':')) return match;
+      
+      const newParams = params.split(',').map(param => {
+        param = param.trim();
+        if (!param || param.includes(':')) return param;
+        return `${param}: any`;
+      }).join(', ');
+      
+      return `function ${funcName}(${newParams})`;
+    }
   );
   
   fs.writeFileSync(filePath, content);
+  console.log(`已修复: ${filePath}`);
+}
+
+// 扫描并修复特定文件
+function fixSpecificFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    fixTypeErrors(filePath);
+    console.log(`已修复指定文件: ${filePath}`);
+    return true;
+  }
+  return false;
 }
 
 // 主函数
 function main() {
-  const rootDir = process.cwd();
-  const tsFiles = findTypeScriptFiles(rootDir);
+  // 优先修复已知有问题的文件
+  const specificFiles = [
+    path.join(process.cwd(), 'app', '(game)', 'exercises', '[id]', 'chat', 'page.tsx')
+  ];
   
-  tsFiles.forEach(file => {
-    try {
-      fixTypeErrors(file);
-    } catch (err) {
-      console.error(`处理文件 ${file} 时出错:`, err);
+  let fixed = false;
+  for (const file of specificFiles) {
+    if (fixSpecificFile(file)) {
+      fixed = true;
     }
-  });
+  }
+  
+  // 如果没有找到特定文件，扫描所有文件
+  if (!fixed) {
+    console.log('未找到指定文件，将扫描所有TypeScript文件...');
+    const rootDir = process.cwd();
+    const tsFiles = findTypeScriptFiles(rootDir);
+    
+    tsFiles.forEach(file => {
+      try {
+        fixTypeErrors(file);
+      } catch (err) {
+        console.error(`处理文件 ${file} 时出错:`, err);
+      }
+    });
+  }
 }
 
 main(); 

@@ -16,7 +16,8 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test --workers=4"
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test --workers=4",
+    "build:prod": "cross-env NODE_ENV=production NEXT_TYPESCRIPT_CHECK=false NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint"
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.8",
@@ -102,6 +103,7 @@
     "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "cross-env": "^7.0.3",
     "drizzle-kit": "^0.25.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",

@@ -3,9 +3,25 @@
 import { useState } from 'react';
 import { triggerPointsUpdate } from '@/lib/client/events';
 
-export function RewardClaim({ exerciseId, onClose, showAlert = true }) {
+// 定义接口
+interface RewardClaimProps {
+  exerciseId: string;
+  onClose: () => void;
+  showAlert?: boolean;
+}
+
+// 定义响应结果类型
+interface ClaimResult {
+  success: boolean;
+  totalPoints?: number;
+  pointsAwarded?: number;
+  error?: string;
+  message?: string;
+}
+
+export function RewardClaim({ exerciseId, onClose, showAlert = true }: RewardClaimProps) {
   const [claiming, setClaiming] = useState(false);
-  const [claimResult, setClaimResult] = useState(null);
+  const [claimResult, setClaimResult] = useState<ClaimResult | null>(null);
   
   const claimReward = async () => {
     if (claiming) return;
@@ -46,9 +62,12 @@ export function RewardClaim({ exerciseId, onClose, showAlert = true }) {
         console.error('奖励领取失败:', response.status);
         setClaimResult({ success: false, error: '领取失败，请重试' });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('领取奖励出错:', error);
-      setClaimResult({ success: false, error: error.message });
+      setClaimResult({ 
+        success: false, 
+        error: error instanceof Error ? error.message : '未知错误' 
+      });
     } finally {
       setClaiming(false);
     }

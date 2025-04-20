@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from 'react';
 
+// 定义粒子类型
+interface Particle {
+  width: number;
+  height: number;
+  top: number;
+  left: number;
+  duration: number;
+}
+
 export default function ParticleBackground() {
-  const [particles, setParticles] = useState([]);
+  // 使用正确类型的状态
+  const [particles, setParticles] = useState<Particle[]>([]);
   
   useEffect(() => {
     // 只在客户端生成粒子
-    const newParticles = Array.from({ length: 20 }, () => ({
+    const newParticles: Particle[] = Array.from({ length: 20 }, () => ({
       width: Math.random() * 10 + 5,
       height: Math.random() * 10 + 5,
       top: Math.random() * 100,

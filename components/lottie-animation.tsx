@@ -1,14 +1,23 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import lottie from 'lottie-web';
+import lottie, { AnimationItem } from 'lottie-web';
 
-export default function LottieAnimation({ animationPath, className = '' }) {
-  const container = useRef(null);
+// 定义组件属性类型
+interface LottieAnimationProps {
+  animationPath: string;
+  className?: string;
+}
+
+export default function LottieAnimation({ 
+  animationPath, 
+  className = '' 
+}: LottieAnimationProps) {
+  const container = useRef<HTMLDivElement | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   
   useEffect(() => {
-    let anim;
+    let anim: AnimationItem | undefined;
     if (container.current) {
       anim = lottie.loadAnimation({
         container: container.current,

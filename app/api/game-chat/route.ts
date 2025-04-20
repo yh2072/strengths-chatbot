@@ -62,9 +62,23 @@ const EXERCISE_PROMPTS = {
 `
 };
 
-export async function POST(request: NextRequest) {
+// 定义类型
+type CharacterId = keyof typeof CHARACTER_PROMPTS;
+type ExerciseId = keyof typeof EXERCISE_PROMPTS;
+type Message = {
+  role: string;
+  content: string;
+  [key: string]: any;
+};
+
+export async function POST(request: NextRequest): Promise<Response> {
   try {
-    const { messages, characterId, exerciseId, currentStep } = await request.json();
+    const { messages, characterId, exerciseId, currentStep } = await request.json() as {
+      messages: Message[];
+      characterId: string;
+      exerciseId: string;
+      currentStep: number;
+    };
     
     if (!characterId || !exerciseId) {
       return new Response(
@@ -73,9 +87,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 获取角色和练习提示
-    const characterPrompt = CHARACTER_PROMPTS[characterId] || CHARACTER_PROMPTS.einstein;
-    const exercisePrompt = EXERCISE_PROMPTS[exerciseId] || '';
+    // 使用类型断言保证类型安全
+    const characterPrompt = CHARACTER_PROMPTS[characterId as CharacterId] || CHARACTER_PROMPTS.einstein;
+    const exercisePrompt = EXERCISE_PROMPTS[exerciseId as ExerciseId] || '';
     
     // 构建系统提示
     const systemPrompt = `${characterPrompt}\n\n${exercisePrompt}\n\n当前用户正在练习的第${currentStep + 1}步。
@@ -99,7 +113,7 @@ ${currentStep === 4 ? "引导用户观察能量和满足感的变化" : ""}
           role: "system",
           content: systemPrompt
         },
-        ...messages.map(m => ({
+        ...messages.map((m: Message) => ({
           role: m.role === "user" ? "user" : "assistant",
           content: m.content
         }))
@@ -134,6 +148,11 @@ ${currentStep === 4 ? "引导用户观察能量和满足感的变化" : ""}
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // 检查响应体是否存在
+          if (!response.body) {
+            throw new Error('硅基流动API响应没有响应体');
+          }
+          
           // 读取流
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
@@ -189,6 +208,16 @@ ${currentStep === 4 ? "引导用户观察能量和满足感的变化" : ""}
           }
         } catch (error) {
           console.error("处理流时出错:", error);
+          // 提供更好的错误信息给客户端
+          try {
+            const errorMessage = {
+              type: 'error',
+              message: error instanceof Error ? error.message : '未知错误'
+            };
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorMessage)}\n\n`));
+          } catch (e) {
+            // 忽略在错误处理中发生的错误
+          }
           controller.error(error);
         } finally {
           controller.close();

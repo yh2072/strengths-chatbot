@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from 'react';
 
-export default function DebugChat({ id }) {
-  const [events, setEvents] = useState([]);
+// 定义事件类型接口
+interface DebugEvent {
+  type?: string;
+  id?: string;
+  content?: string;
+  raw?: string;
+  [key: string]: any;
+}
+
+export default function DebugChat({ id }: { id: string }) {
+  const [events, setEvents] = useState<DebugEvent[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   
   useEffect(() => {

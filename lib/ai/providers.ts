@@ -11,23 +11,59 @@ import {
   reasoningModel,
   titleModel,
 } from './models.test';
-import type { ImageModelV1 } from 'ai';
 
-// 配置SiliconFlow API适配器 - 使用OpenAI SDK直接配置
+// 定义API错误类型接口
+interface ApiError {
+  message: string;
+  response?: {
+    status: number;
+    headers: Record<string, string>;
+    data: any;
+  };
+  request?: any;
+  [key: string]: any;
+}
+
+// 定义消息内容类型
+interface MessageContent {
+  type?: string;
+  text?: string;
+  content?: string | any;
+  [key: string]: any;
+}
+
+// 定义API请求类型
+interface ApiRequest {
+  messages?: Array<{role: string, content: string | MessageContent[]}>; 
+  system?: string;
+  prompt?: string;
+  [key: string]: any;
+}
+
+// 修复方法1: 定义更详细的类型来包含tools属性
+interface SiliconFlowRequestData {
+  n: number;
+  response_format: { type: string };
+  stop: null;
+  tools?: any[]; // 添加tools属性
+  [key: string]: any; // 允许其他属性
+}
+
+// 配置SiliconFlow API适配器
 const siliconFlowClient = new OpenAI({
   baseURL: process.env.SILICONFLOW_API_BASE_URL || 'https://api.siliconflow.cn/v1',
   apiKey: process.env.SILICONFLOW_API_KEY || '',
 });
 
 // 修正SiliconFlow API调用函数
-const siliconFlowApiCall = async (endpoint: string, data: any) => {
+const siliconFlowApiCall = async (endpoint: string, data: Record<string, any>) => {
   // 确保完全匹配示例格式，包括所有必需的参数
   const completeData = {
     ...data,
     n: 1,
     response_format: { type: "text" },
     stop: null
-  };
+  } as any; // 使用any类型断言
   
   // 如果未指定tools且API需要，添加空tools数组
   if (!completeData.tools) {
@@ -59,18 +95,13 @@ const createSiliconFlowAdapter = (model: string) => {
   const actualModel = "Qwen/QwQ-32B"; // 默认模型
   
   return {
-    doStream: async ({ messages, system, prompt, ...options }: { 
-      messages?: Array<{role: string, content: string}>, 
-      system?: string,
-      prompt?: string,
-      [key: string]: any 
-    }) => {
+    doStream: async ({ messages, system, prompt, ...options }: ApiRequest) => {
       try {
         console.log('发送到SiliconFlow API的消息:', JSON.stringify(messages, null, 2));
         console.log('使用模型:', model);
         
         // 构建简单的消息数组 - 只包含标准角色
-        const formattedMessages = [];
+        const formattedMessages: Array<{role: string, content: string}> = [];
         
         // 添加系统消息
         if (system) {
@@ -100,14 +131,15 @@ const createSiliconFlowAdapter = (model: string) => {
               content = msg.content;
             } else if (Array.isArray(msg.content)) {
               // 展平数组内容
-              content = msg.content.map(item => {
+              const contentArray = msg.content as MessageContent[];
+              content = contentArray.map((item: MessageContent) => {
                 if (typeof item === 'string') return item;
                 if (item && typeof item === 'object') {
                   if (item.type === 'text' && item.text) return item.text;
                   if (item.content) return String(item.content);
                 }
                 return '';
-              }).filter(Boolean).join('\n');
+              }).filter((text: string) => text).join('\n');
             }
             
             // 确保内容不为空
@@ -164,7 +196,7 @@ const createSiliconFlowAdapter = (model: string) => {
         });
         
         // 检查响应
-        const checkResponseValidity = (response) => {
+        const checkResponseValidity = (response: Response) => {
           console.log('================== 检查响应有效性 ==================');
           
           // 检查响应头
@@ -178,7 +210,11 @@ const createSiliconFlowAdapter = (model: string) => {
           return response;
         };
         
-        // 检查响应
+        // 响应检查
+        if (!response.body) {
+          throw new Error('响应体为空');
+        }
+        
         checkResponseValidity(response);
         
         // 响应接收后立即记录
@@ -191,7 +227,13 @@ const createSiliconFlowAdapter = (model: string) => {
         // 创建一个ReadableStream来处理响应
         const stream = new ReadableStream({
           async start(controller) {
-            const reader = response.body.getReader();
+            // 使用可选链和短路评估
+            const reader = response.body?.getReader();
+            if (!reader) {
+              controller.error(new Error('无法获取响应流'));
+              return;
+            }
+            
             const decoder = new TextDecoder();
             let buffer = '';
             
@@ -251,7 +293,8 @@ const createSiliconFlowAdapter = (model: string) => {
                         console.log('[SSE] 此消息无内容');
                       }
                     } catch (e) {
-                      console.error('[SSE] 解析错误:', e.message);
+                      const parseError = e as Error;
+                      console.error('[SSE] 解析错误:', parseError.message);
                       console.error('问题数据:', line.substring(6));
                     }
                   } else {
@@ -267,7 +310,17 @@ const createSiliconFlowAdapter = (model: string) => {
               
               controller.close();
             } catch (error) {
-              controller.error(error);
+              const err = error as ApiError;
+              console.error('流处理错误:', err.message);
+              
+              // 尝试发送错误消息给客户端
+              try {
+                controller.enqueue(new TextEncoder().encode('处理流时出错，请稍后再试。'));
+              } catch (e) {
+                // 忽略控制器已关闭的错误
+              }
+              
+              controller.close();
             }
           }
         });
@@ -277,17 +330,20 @@ const createSiliconFlowAdapter = (model: string) => {
           rawCall: { rawPrompt: null, rawSettings: {} },
         };
       } catch (error) {
-        console.error('SiliconFlow API错误:', error);
+        const err = error as ApiError;
+        console.error('SiliconFlow API错误:', err.message);
+        
         // 详细输出错误信息
-        if (error.response) {
-          console.error('响应状态:', error.response.status);
-          console.error('响应头:', error.response.headers);
-          console.error('响应体:', error.response.data);
-        } else if (error.request) {
-          console.error('请求未收到响应:', error.request);
+        if (err.response) {
+          console.error('响应状态:', err.response.status);
+          console.error('响应头:', err.response.headers);
+          console.error('响应体:', err.response.data);
+        } else if (err.request) {
+          console.error('请求未收到响应:', err.request);
         } else {
-          console.error('错误消息:', error.message);
+          console.error('错误消息:', err.message);
         }
+        
         // 用一个基本响应替代，避免整个应用崩溃
         return {
           stream: new ReadableStream({
@@ -303,17 +359,12 @@ const createSiliconFlowAdapter = (model: string) => {
     },
     
     // 为非流式生成添加doGenerate方法
-    doGenerate: async ({ messages, system, prompt, ...options }: { 
-      messages?: Array<{role: string, content: string}>, 
-      system?: string,
-      prompt?: string,
-      [key: string]: any 
-    }) => {
+    doGenerate: async ({ messages, system, prompt, ...options }: ApiRequest) => {
       try {
         console.log('SiliconFlow生成标题，使用模型:', model);
         
         // 构建简单的消息数组
-        const formattedMessages = [];
+        const formattedMessages: Array<{role: string, content: string}> = [];
         
         // 添加系统消息
         if (system) {
@@ -337,12 +388,12 @@ const createSiliconFlowAdapter = (model: string) => {
               } else if (Array.isArray(parsedPrompt.parts)) {
                 // 处理parts数组
                 userContent = parsedPrompt.parts
-                  .map(part => {
+                  .map((part: any) => {
                     if (typeof part === 'string') return part;
                     if (part && typeof part === 'object' && 'text' in part) return part.text;
                     return '';
                   })
-                  .filter(text => text)
+                  .filter((text: string) => text)
                   .join('\n');
               } else if (typeof parsedPrompt.text === 'string') {
                 userContent = parsedPrompt.text;
@@ -414,7 +465,8 @@ const createSiliconFlowAdapter = (model: string) => {
           rawCompletion: data,
         };
       } catch (error) {
-        console.error('SiliconFlow生成标题时出错:', error);
+        const err = error as Error;
+        console.error('SiliconFlow生成标题时出错:', err.message);
         // 出错时返回默认标题，避免阻止创建聊天
         return {
           text: '新对话',
@@ -424,21 +476,6 @@ const createSiliconFlowAdapter = (model: string) => {
           rawCompletion: null,
         };
       }
-    }
-  };
-};
-
-// 创建SiliconFlow图像模型适配器
-const createSiliconFlowImageAdapter = (model: string): ImageModelV1 => {
-  return {
-    generate: async (prompt: string, options: any) => {
-      const response = await siliconFlowClient.images.generate({
-        model,
-        prompt,
-        ...options
-      });
-      
-      return response.data[0]?.url || '';
     }
   };
 };
@@ -461,9 +498,6 @@ export const myProvider = isTestEnvironment
         }),
         'title-model': createSiliconFlowAdapter('deepseek-ai/DeepSeek-V3') as any,
         'artifact-model': createSiliconFlowAdapter('deepseek-ai/DeepSeek-V3') as any,
-      },
-      imageModels: {
-        'small-model': createSiliconFlowImageAdapter('stability-ai/sdxl'),
       },
     });
 

@@ -4,25 +4,33 @@ import React, { useEffect, useRef } from 'react';
 import { motion as framerMotion, AnimatePresence as framerAnimatePresence, useMotionValue } from 'framer-motion';
 import { forwardRef } from 'react';
 
-// 安全的动画元素包装器
-export const SafeMotionDiv = forwardRef(({ children, ...props }, ref) => {
-  const elementRef = useRef(null);
-  
-  useEffect(() => {
-    // 确保元素有 __complete 属性
-    if (elementRef.current && !elementRef.current.__complete) {
-      Object.defineProperty(elementRef.current, '__complete', {
-        value: true,
-        writable: true,
-        configurable: true
-      });
-    }
-  }, []);
-  
-  return (
-    <div ref={(el) => {
+// 定义SafeMotionDiv的属性类型
+interface SafeMotionDivProps {
+  children?: React.ReactNode;
+  [key: string]: any; // 允许传递其他属性
+}
+
+// 使用泛型定义forwardRef类型
+export const SafeMotionDiv = forwardRef<HTMLDivElement, SafeMotionDivProps>(
+  ({ children, ...props }, ref) => {
+    const elementRef = useRef<HTMLDivElement | null>(null);
+    
+    useEffect(() => {
+      // 确保元素有 __complete 属性
+      if (elementRef.current && !('__complete' in elementRef.current)) {
+        Object.defineProperty(elementRef.current, '__complete', {
+          value: true,
+          writable: true,
+          configurable: true
+        });
+      }
+    }, []);
+    
+    // 处理ref的逻辑
+    const handleRef = (el: HTMLDivElement | null) => {
       elementRef.current = el;
-      // 处理转发的 ref
+      
+      // 处理转发的ref
       if (ref) {
         if (typeof ref === 'function') {
           ref(el);
@@ -30,25 +38,33 @@ export const SafeMotionDiv = forwardRef(({ children, ...props }, ref) => {
           ref.current = el;
         }
       }
-    }} {...props}>
-      {children}
-    </div>
-  );
-});
+    };
+    
+    return (
+      <div ref={handleRef} {...props}>
+        {children}
+      </div>
+    );
+  }
+);
 
+// 确保组件有displayName
 SafeMotionDiv.displayName = 'SafeMotionDiv';
 
 // 创建安全的动画代理
-function createSafeProxy(target) {
+function createSafeProxy<T extends object>(target: T): T {
   return new Proxy(target, {
-    get: function(obj, prop) {
+    get: function(obj: T, prop: string | symbol) {
       // 如果是普通组件类型
-      if (typeof obj[prop] === 'function' && prop[0] === prop[0].toLowerCase()) {
-        return function(props) {
+      if (typeof obj[prop as keyof T] === 'function' && 
+          typeof prop === 'string' && 
+          prop.length > 0 && 
+          prop[0] === prop[0].toLowerCase()) {
+        return function(props: Record<string, any> | undefined) {
           if (!props) return null;
           
           // 获取原始组件
-          const OriginalComponent = obj[prop];
+          const OriginalComponent = obj[prop as keyof T] as any;
           const { children, ...rest } = props;
           
           // 添加安全属性
@@ -56,7 +72,7 @@ function createSafeProxy(target) {
         };
       }
       
-      return obj[prop];
+      return obj[prop as keyof T];
     }
   });
 }
@@ -64,27 +80,39 @@ function createSafeProxy(target) {
 // 安全的动画版本
 export const motion = createSafeProxy(framerMotion);
 
-// 安全的 AnimatePresence 组件
-export function AnimatePresence({ children, ...props }) {
+// 同样为其他组件添加类型
+interface AnimatePresenceProps {
+  children?: React.ReactNode;
+  [key: string]: any;
+}
+
+export function AnimatePresence({ children, ...props }: AnimatePresenceProps) {
   // 在客户端渲染
   if (typeof window === 'undefined') {
     return <>{children}</>;
   }
   
+  const { AnimatePresence: FramerAnimatePresence } = require('framer-motion');
+  
   return (
-    <framerAnimatePresence {...props}>
+    <FramerAnimatePresence {...props}>
       {children}
-    </framerAnimatePresence>
+    </FramerAnimatePresence>
   );
 }
 
-// 动画辅助函数 - 安全版本
-export function useSafeMotionValue(initialValue) {
+// Motion值钩子也需要类型
+export function useSafeMotionValue<T>(initialValue: T) {
+  if (typeof window === 'undefined') {
+    return { get: () => initialValue, set: () => {} };
+  }
+  
+  const { useMotionValue } = require('framer-motion');
   const value = useMotionValue(initialValue);
   
   // 确保值对象有所有需要的属性
   useEffect(() => {
-    if (value && !value.__complete) {
+    if (value && !('__complete' in value)) {
       Object.defineProperty(value, '__complete', {
         value: true,
         writable: true,

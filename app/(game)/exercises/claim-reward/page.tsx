@@ -5,12 +5,21 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { triggerPointsUpdate } from '@/lib/client/events';
 
+interface ClaimResult {
+  success: boolean;
+  pointsAwarded: number;
+  totalPoints: number;
+  message?: string;
+  eventType?: string;
+  timestamp?: string;
+}
+
 export default function ClaimRewardPage() {
   const searchParams = useSearchParams();
   const exerciseId = searchParams.get('id');
   
   const [claiming, setClaiming] = useState(false);
-  const [claimResult, setClaimResult] = useState(null);
+  const [claimResult, setClaimResult] = useState<ClaimResult | null>(null);
   const [error, setError] = useState('');
   
   useEffect(() => {
@@ -71,7 +80,7 @@ export default function ClaimRewardPage() {
           </div>
         )}
         
-        {claimResult ? (
+        {claimResult && (
           <div className="text-center mb-6">
             <div className="p-4 bg-green-50 text-green-700 rounded-lg mb-4">
               <p className="font-medium mb-1">奖励领取成功!</p>
@@ -86,30 +95,30 @@ export default function ClaimRewardPage() {
               返回练习列表
             </Link>
           </div>
-        ) : (
-          <div className="flex flex-col items-center">
-            <button
-              onClick={claimReward}
-              disabled={claiming || !exerciseId}
-              className={`
-                px-8 py-4 rounded-lg font-medium text-white text-lg mb-6 w-full max-w-xs
-                ${claiming || !exerciseId
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700'}
-                transition duration-200 shadow-md
-              `}
-            >
-              {claiming ? '领取中...' : '领取积分奖励'}
-            </button>
-            
-            <Link 
-              href="/exercises" 
-              className="text-indigo-600 hover:text-indigo-800 hover:underline"
-            >
-              返回练习列表
-            </Link>
-          </div>
         )}
+        
+        <div className="flex flex-col items-center">
+          <button
+            onClick={claimReward}
+            disabled={claiming || !exerciseId}
+            className={`
+              px-8 py-4 rounded-lg font-medium text-white text-lg mb-6 w-full max-w-xs
+              ${claiming || !exerciseId
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700'}
+              transition duration-200 shadow-md
+            `}
+          >
+            {claiming ? '领取中...' : '领取积分奖励'}
+          </button>
+          
+          <Link 
+            href="/exercises" 
+            className="text-indigo-600 hover:text-indigo-800 hover:underline"
+          >
+            返回练习列表
+          </Link>
+        </div>
       </div>
     </div>
   );

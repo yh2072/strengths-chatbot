@@ -87,6 +87,11 @@ export async function GET(req: Request) {
             throw new Error(`API错误 ${response.status}: ${errorText}`);
           }
           
+          // 在读取流之前添加检查
+          if (!response.body) {
+            throw new Error('API响应没有响应体');
+          }
+          
           // 读取流
           const reader = response.body.getReader();
           const decoder = new TextDecoder();

@@ -1,4 +1,4 @@
-import type { InferSelectModel } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import {
   pgTable,
   varchar,
@@ -25,18 +25,19 @@ export type UserType = {
   updatedAt?: Date;
 };
 
-export const User = pgTable("User", {
+export const User = pgTable('User', {
   id: varchar('id', { length: 255 }).primaryKey(),
   email: varchar('email', { length: 255 }).notNull(),
-  password: varchar('password', { length: 255 }),
   name: varchar('name', { length: 255 }),
+  password: varchar('password', { length: 255 }).notNull(),
   points: integer('points').default(0),
   level: integer('level').default(1),
-  created_at: timestamp('created_at', { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
-  updated_at: timestamp('updated_at', { mode: 'string' })
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow()
 });
 
-export type User = InferSelectModel<typeof User>;
+export type UserSelect = InferSelectModel<typeof User>;
+export type UserInsert = InferInsertModel<typeof User>;
 
 export const chat = pgTable('Chat', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -50,7 +51,8 @@ export const chat = pgTable('Chat', {
     .default('private'),
 });
 
-export type Chat = InferSelectModel<typeof chat>;
+export type ChatSelect = InferSelectModel<typeof chat>;
+export type ChatInsert = InferInsertModel<typeof chat>;
 
 // DEPRECATED: The following schema is deprecated and will be removed in the future.
 // Read the migration guide at https://github.com/vercel/ai-chatbot/blob/main/docs/04-migrate-to-parts.md

@@ -1,4 +1,15 @@
-import { Chat } from '@/lib/db/schema';
+import { chat } from '@/lib/db/schema';
+import { useChatVisibility } from '@/hooks/use-chat-visibility';
+
+// 自定义可见性类型代替从模块导入
+type Chat = {
+  id: string;
+  title: string;
+  visibility: 'public' | 'private'; // 使用字符串字面量类型
+  userId?: string;
+  [key: string]: any;
+};
+
 import {
   SidebarMenuAction,
   SidebarMenuButton,
@@ -24,7 +35,6 @@ import {
   TrashIcon,
 } from './icons';
 import { memo } from 'react';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
 const PureChatItem = ({
   chat,

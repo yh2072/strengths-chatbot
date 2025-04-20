@@ -4,8 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+// 定义对话类型接口
+interface Conversation {
+  id: string;
+  title: string;
+  createdAt: string;
+  messages?: Array<any>;
+  [key: string]: any;
+}
+
 export default function ConversationHistory() {
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -27,7 +36,7 @@ export default function ConversationHistory() {
     fetchHistory();
   }, []);
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('zh-CN', {
       year: 'numeric',
@@ -50,7 +59,7 @@ export default function ConversationHistory() {
         ) : conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500">暂无历史对话</div>
         ) : (
-          conversations.map(convo => (
+          conversations.map((convo: Conversation) => (
             <Link 
               href={`/chat/${convo.id}`}
               key={convo.id}

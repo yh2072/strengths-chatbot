@@ -2,13 +2,22 @@
 
 import { useState, useEffect } from 'react';
 
+// 定义接口
+interface StepProgressProps {
+  currentStep: number;
+  totalSteps: number;
+  isLoading: boolean;
+  canProceed: boolean;
+  onNextStep: () => void;
+}
+
 export function StepProgress({ 
   currentStep, 
   totalSteps, 
   isLoading, 
   canProceed,
   onNextStep
-}) {
+}: StepProgressProps) {
   return (
     <div className="fixed bottom-20 right-4 sm:right-6 bg-white rounded-xl shadow-lg p-2.5 sm:p-3 flex flex-col items-center border border-indigo-100 animate-in slide-in-from-right-2 duration-300 w-[calc(100%-2rem)] sm:w-auto max-w-[250px] sm:max-w-none mx-auto sm:mx-0">
       <div className="text-xs font-medium bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">

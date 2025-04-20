@@ -3,13 +3,31 @@
 import { useState, useRef, useEffect } from 'react';
 import { generateUUID } from '@/lib/utils';
 
+// 添加消息类型接口
+interface Message {
+  id?: string;
+  role: string;
+  content: string;
+  parts?: string[];
+  createdAt?: string;
+  incomplete?: boolean;
+  error?: boolean;
+  [key: string]: any;
+}
+
 // 创建一个简单的聊天UI
-export default function CustomChat({ id, selectedModel }) {
-  const [messages, setMessages] = useState([]);
+export default function CustomChat({ 
+  id, 
+  selectedModel 
+}: { 
+  id: string; 
+  selectedModel: string;
+}) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-  const eventSourceRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -29,7 +47,7 @@ export default function CustomChat({ id, selectedModel }) {
           const data = await response.json();
           
           // 处理各种可能的消息格式
-          const formattedMessages = data.map(msg => {
+          const formattedMessages = data.map((msg: any) => {
             let content = '';
             
             // 尝试从parts中获取内容
@@ -37,7 +55,7 @@ export default function CustomChat({ id, selectedModel }) {
               // 如果parts是对象数组，尝试提取text属性
               if (typeof msg.parts[0] === 'object') {
                 content = msg.parts
-                  .map(part => part.text || part.content || JSON.stringify(part))
+                  .map((part: any) => part.text || part.content || JSON.stringify(part))
                   .join('\n');
               } else {
                 // 如果parts是字符串数组，直接连接
@@ -58,8 +76,8 @@ export default function CustomChat({ id, selectedModel }) {
           });
           
           // 按时间排序
-          formattedMessages.sort((a, b) => 
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          formattedMessages.sort((a: Message, b: Message) => 
+            new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime()
           );
           
           setMessages(formattedMessages);
@@ -73,7 +91,7 @@ export default function CustomChat({ id, selectedModel }) {
   }, [id]);
 
   // 处理提交
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
     
@@ -83,7 +101,7 @@ export default function CustomChat({ id, selectedModel }) {
     }
     
     // 创建用户消息
-    const userMessage = {
+    const userMessage: Message = {
       id: generateUUID(),
       role: 'user',
       content: input,
@@ -192,7 +210,7 @@ export default function CustomChat({ id, selectedModel }) {
           )
         );
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('发送消息错误:', error);
       setIsLoading(false);
       
@@ -201,7 +219,7 @@ export default function CustomChat({ id, selectedModel }) {
         ...prev,
         { 
           role: 'system', 
-          content: `发送失败: ${error.message || '连接错误'}`, 
+          content: `发送失败: ${error instanceof Error ? error.message : '连接错误'}`, 
           error: true 
         }
       ]);
@@ -264,7 +282,7 @@ export default function CustomChat({ id, selectedModel }) {
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
           placeholder="发送消息..."
           className="flex-1 p-2 border rounded"
           disabled={isLoading}

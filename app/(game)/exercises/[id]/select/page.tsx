@@ -64,17 +64,18 @@ const CHARACTERS = [
   }
 ];
 
-export default function CharacterSelectPage({ params }) {
+// 直接使用any类型
+export default function CharacterSelectPage({ params }: any) {
   const router = useRouter();
   const unwrappedParams = use(params);
-  const { id: exerciseId } = unwrappedParams;
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
-  const [isHovering, setIsHovering] = useState(null);
+  const { id: exerciseId } = unwrappedParams as { id: string };
+  const [selectedCharacter, setSelectedCharacter] = useState<typeof CHARACTERS[0] | null>(null);
+  const [isHovering, setIsHovering] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showQuote, setShowQuote] = useState(false);
 
   // 处理选择角色
-  const handleSelectCharacter = (character) => {
+  const handleSelectCharacter = (character: typeof CHARACTERS[0]) => {
     setSelectedCharacter(character);
     // 选择角色时显示名言
     setShowQuote(true);

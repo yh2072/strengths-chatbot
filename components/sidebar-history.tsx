@@ -22,7 +22,7 @@ import {
   SidebarMenu,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { Chat } from '@/lib/db/schema';
+import { chat } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
 import { ChatItem } from './sidebar-history-item';
 import useSWRInfinite from 'swr/infinite';
@@ -42,6 +42,16 @@ export interface ChatHistory {
 }
 
 const PAGE_SIZE = 20;
+
+// 使用与sidebar-history-item一致的Chat类型
+type Chat = {
+  id: string;
+  title: string;
+  visibility: 'public' | 'private';
+  createdAt: string | Date; // 用于日期分组
+  userId?: string;
+  [key: string]: any;
+};
 
 const groupChatsByDate = (chats: Chat[]): GroupedChats => {
   const now = new Date();

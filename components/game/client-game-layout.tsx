@@ -5,12 +5,39 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogoutButton } from '@/components/ui/logout-button';
 
-export default function ClientGameLayout({ children, session }) {
+// 定义会话和用户类型
+interface UserData {
+  id?: string;
+  name?: string;
+  email?: string;
+  points?: number;
+  level?: number;
+  [key: string]: any;
+}
+
+interface SessionData {
+  user?: UserData;
+}
+
+// 定义点数更新事件的类型
+interface PointsUpdateEvent extends CustomEvent {
+  detail: {
+    points: number;
+  };
+}
+
+export default function ClientGameLayout({ 
+  children, 
+  session 
+}: { 
+  children: React.ReactNode;
+  session: SessionData;
+}) {
   const pathname = usePathname();
-  const [userPoints, setUserPoints] = useState(session?.user?.points || 0);
+  const [userPoints, setUserPoints] = useState<number>(session?.user?.points || 0);
   
   // 处理积分更新事件
-  function handlePointsUpdate(event) {
+  function handlePointsUpdate(event: PointsUpdateEvent) {
     if (event.detail && typeof event.detail.points === 'number') {
       setUserPoints(event.detail.points);
     }
@@ -18,9 +45,9 @@ export default function ClientGameLayout({ children, session }) {
   
   // 添加和移除事件监听器
   useEffect(() => {
-    window.addEventListener('pointsUpdate', handlePointsUpdate);
+    window.addEventListener('pointsUpdate', handlePointsUpdate as EventListener);
     return () => {
-      window.removeEventListener('pointsUpdate', handlePointsUpdate);
+      window.removeEventListener('pointsUpdate', handlePointsUpdate as EventListener);
     };
   }, [userPoints]);
   
@@ -45,7 +72,7 @@ export default function ClientGameLayout({ children, session }) {
               <Link 
                 href="/exercises" 
                 className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  pathname.startsWith('/exercises') 
+                  pathname?.startsWith('/exercises') 
                     ? 'bg-indigo-50 text-indigo-700' 
                     : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
                 }`}
@@ -55,7 +82,7 @@ export default function ClientGameLayout({ children, session }) {
               <Link 
                 href="/dashboard" 
                 className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  pathname.startsWith('/dashboard') 
+                  pathname?.startsWith('/dashboard') 
                     ? 'bg-indigo-50 text-indigo-700' 
                     : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
                 }`}
@@ -65,7 +92,7 @@ export default function ClientGameLayout({ children, session }) {
               <Link 
                 href="/about" 
                 className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  pathname.startsWith('/about') 
+                  pathname?.startsWith('/about') 
                     ? 'bg-indigo-50 text-indigo-700' 
                     : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
                 }`}
@@ -109,7 +136,7 @@ export default function ClientGameLayout({ children, session }) {
           <Link 
             href="/exercises" 
             className={`flex flex-col items-center justify-center ${
-              pathname.startsWith('/exercises') 
+              pathname?.startsWith('/exercises') 
                 ? 'text-indigo-600' 
                 : 'text-gray-500'
             }`}
@@ -123,7 +150,7 @@ export default function ClientGameLayout({ children, session }) {
           <Link 
             href="/dashboard" 
             className={`flex flex-col items-center justify-center ${
-              pathname.startsWith('/dashboard') 
+              pathname?.startsWith('/dashboard') 
                 ? 'text-indigo-600' 
                 : 'text-gray-500'
             }`}
@@ -137,7 +164,7 @@ export default function ClientGameLayout({ children, session }) {
           <Link 
             href="/profile" 
             className={`flex flex-col items-center justify-center ${
-              pathname.startsWith('/profile') 
+              pathname?.startsWith('/profile') 
                 ? 'text-indigo-600' 
                 : 'text-gray-500'
             }`}

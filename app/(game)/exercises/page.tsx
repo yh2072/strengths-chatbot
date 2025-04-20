@@ -32,11 +32,11 @@ const EXERCISES = [
 ];
 
 export default function ExercisesPage() {
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   
   // 处理标签选择
-  const toggleTag = (tagId) => {
+  const toggleTag = (tagId: string) => {
     if (selectedTags.includes(tagId)) {
       setSelectedTags(selectedTags.filter(id => id !== tagId));
     } else {

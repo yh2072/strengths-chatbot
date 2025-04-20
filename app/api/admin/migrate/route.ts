@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 
 // 处理 GET 请求
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // 验证管理员权限
     const session = await auth();
@@ -28,17 +28,17 @@ export async function GET(request: NextRequest) {
       success: true,
       message: '迁移已执行' 
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('迁移执行错误:', error);
     return NextResponse.json({ 
       error: '迁移失败', 
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }
 
 // 处理 POST 请求
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // 验证管理员权限
     const session = await auth();
@@ -52,11 +52,11 @@ export async function POST(request: NextRequest) {
       success: true, 
       message: '迁移已执行' 
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('迁移执行错误:', error);
     return NextResponse.json({ 
       error: '迁移失败', 
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 } 

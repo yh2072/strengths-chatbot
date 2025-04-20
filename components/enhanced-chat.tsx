@@ -4,14 +4,31 @@ import { useState, useRef, useEffect } from 'react';
 import { generateUUID } from '@/lib/utils';
 import Link from 'next/link';
 
-export default function EnhancedChat({ id, selectedModel }) {
-  const [messages, setMessages] = useState([]);
+// 定义消息类型接口
+interface Message {
+  id?: string;
+  role: string;
+  content: string;
+  createdAt?: string;
+  incomplete?: boolean;
+  error?: boolean;
+  [key: string]: any;
+}
+
+export default function EnhancedChat({ 
+  id, 
+  selectedModel 
+}: { 
+  id: string; 
+  selectedModel: string;
+}) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
-  const messagesEndRef = useRef(null);
-  const eventSourceRef = useRef(null);
-  const inputRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 常用表情符号
   const emojis = ['😊', '👍', '🤔', '❤️', '🔥', '👏', '😂', '🙏', '🎉', '🚀'];
@@ -39,7 +56,7 @@ export default function EnhancedChat({ id, selectedModel }) {
           const data = await response.json();
           
           // 处理各种可能的消息格式
-          const formattedMessages = data.map(msg => {
+          const formattedMessages = data.map((msg: any) => {
             let content = '';
             
             // 尝试从parts中获取内容
@@ -47,7 +64,7 @@ export default function EnhancedChat({ id, selectedModel }) {
               // 如果parts是对象数组，尝试提取text属性
               if (typeof msg.parts[0] === 'object') {
                 content = msg.parts
-                  .map(part => part.text || part.content || JSON.stringify(part))
+                  .map((part: any) => part.text || part.content || JSON.stringify(part))
                   .join('\n');
               } else {
                 // 如果parts是字符串数组，直接连接
@@ -68,8 +85,8 @@ export default function EnhancedChat({ id, selectedModel }) {
           });
           
           // 按时间排序
-          formattedMessages.sort((a, b) => 
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          formattedMessages.sort((a: Message, b: Message) => 
+            new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime()
           );
           
           setMessages(formattedMessages);
@@ -83,7 +100,7 @@ export default function EnhancedChat({ id, selectedModel }) {
   }, [id]);
 
   // 处理提交
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
     
@@ -96,7 +113,7 @@ export default function EnhancedChat({ id, selectedModel }) {
     setShowEmojis(false);
     
     // 创建用户消息
-    const userMessage = {
+    const userMessage: Message = {
       id: generateUUID(),
       role: 'user',
       content: input,
@@ -191,7 +208,7 @@ export default function EnhancedChat({ id, selectedModel }) {
         
         setIsLoading(false);
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('发送消息失败:', error);
       setIsLoading(false);
       setMessages(prev => [...prev, { 
@@ -203,7 +220,7 @@ export default function EnhancedChat({ id, selectedModel }) {
   };
   
   // 添加表情
-  const addEmoji = (emoji) => {
+  const addEmoji = (emoji: string) => {
     setInput(prev => prev + emoji);
     setShowEmojis(false);
     inputRef.current?.focus();
@@ -358,7 +375,7 @@ export default function EnhancedChat({ id, selectedModel }) {
                 ref={inputRef}
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
                 placeholder="输入问题..."
                 className="flex-1 py-3 px-2 outline-none text-gray-700"
                 disabled={isLoading}

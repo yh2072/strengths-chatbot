@@ -3,7 +3,16 @@
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 
-export default function UserNav({ user }) {
+// 定义用户类型接口
+interface User {
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  [key: string]: any;
+}
+
+export default function UserNav({ user }: { user: User | null | undefined }) {
   const [isOpen, setIsOpen] = useState(false);
   
   if (!user) return null;

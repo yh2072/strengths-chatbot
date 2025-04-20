@@ -2,7 +2,21 @@
 
 import { useState, useEffect } from 'react';
 
-export function ProgressTracker({ steps, currentStep, onStepClick }) {
+// 定义步骤类型接口
+interface Step {
+  id: string | number;
+  title: string;
+  [key: string]: any; // 允许其他可能的属性
+}
+
+// 定义组件属性类型
+interface ProgressTrackerProps {
+  steps: Step[];
+  currentStep: number;
+  onStepClick: (index: number) => void;
+}
+
+export function ProgressTracker({ steps, currentStep, onStepClick }: ProgressTrackerProps) {
   return (
     <div className="w-full mb-4 sm:mb-6">
       <div className="relative w-full bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full h-2.5 sm:h-3 mb-3 sm:mb-4 shadow-inner overflow-hidden">
