@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "node scripts/fix-types.js && node scripts/build.js",
+    "build": "node scripts/fix-types.js && next build --no-lint",
     "start": "next start",
     "lint": "next lint || true && biome lint --unsafe || true",
     "lint:fix": "next lint --fix && biome lint --write --unsafe",
@@ -17,7 +17,8 @@
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
     "test": "export PLAYWRIGHT=True && pnpm exec playwright test --workers=4",
-    "build:prod": "cross-env NODE_ENV=production NEXT_TYPESCRIPT_CHECK=false NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint"
+    "build:prod": "cross-env NODE_ENV=production NEXT_TYPESCRIPT_CHECK=false NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint",
+    "build:fast": "NEXT_TYPESCRIPT_CHECK=0 next build --no-lint"
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.8",

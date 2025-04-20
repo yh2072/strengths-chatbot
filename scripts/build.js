@@ -57,7 +57,7 @@ try {
 
   // 执行构建
   console.log('Building app...');
-  execSync('next build --no-lint --typescript false', { stdio: 'inherit' });
+  execSync('next build --no-lint', { stdio: 'inherit' });
 } finally {
   // 恢复原始配置
   if (originalTsconfig) {
