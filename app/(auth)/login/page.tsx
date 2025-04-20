@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useState, Suspense } from 'react';
 import { toast } from '@/components/toast';
+import dynamic from 'next/dynamic';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
@@ -11,6 +12,11 @@ import LottieAnimation from '@/components/lottie-animation';
 
 import { login, type LoginActionState } from '../actions';
 import { storeUserInfo } from '@/app/actions/auth';
+
+// 动态导入客户端组件并禁用服务器端渲染
+const LoginForm = dynamic(() => import('@/components/login-form'), { 
+  ssr: false 
+});
 
 export default function LoginPage() {
   const router = useRouter();
@@ -114,18 +120,7 @@ export default function LoginPage() {
               <p className="text-gray-500 mt-1">继续你的成长之旅吧~</p>
             </div>
             
-            <AuthForm action={handleSubmit} defaultEmail={email}>
-              <SubmitButton isSuccessful={isSuccessful} className="w-full mx-auto">登录</SubmitButton>
-              <p className="text-center text-sm text-gray-600 mt-4">
-                还没有账号？{' '}
-                <Link
-                  href="/register"
-                  className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
-                >
-                  速速注册
-                </Link>
-              </p>
-            </AuthForm>
+            <LoginForm />
             
             <div className="mt-8 flex items-center justify-center space-x-4">
               <Link href="#" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">忘记密码?</Link>
