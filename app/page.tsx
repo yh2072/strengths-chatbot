@@ -1,8 +1,24 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import LottieAnimation from '@/components/ui/lottie-animation';
+import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
+
+// 动态导入Lottie组件，禁用SSR
+const LottieAnimation = dynamic(
+  () => import('@/components/lottie-animation'),
+  { ssr: false }
+);
 
 export default function Home() {
+  // 添加客户端挂载状态
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-6 sm:p-12 bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 overflow-hidden relative">
       {/* 背景装饰 */}
@@ -21,15 +37,15 @@ export default function Home() {
       
       {/* 中间内容 */}
       <div className="flex flex-col items-center justify-center flex-grow relative z-20 max-w-3xl mx-auto">
-        <div className="w-full max-w-md mb-8">
-          <LottieAnimation 
-            animationPath="/animations/easter-bunny-hugging-easter-egg.json"
-            loop={true}
-            autoplay={true}
-            speed={1}
-            className="w-full max-w-md mx-auto"
-          />
-        </div>
+        {/* 仅在客户端渲染Lottie动画 */}
+        {isMounted && (
+          <div className="w-full max-w-md mb-8">
+            <LottieAnimation 
+              animationPath="/animations/easter-bunny-hugging-easter-egg.json"
+              className="w-full max-w-md mx-auto"
+            />
+          </div>
+        )}
         
         <h1 className="text-4xl sm:text-5xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text mb-6">
           夸夸星球

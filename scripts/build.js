@@ -57,7 +57,7 @@ try {
 
   // 执行构建
   console.log('Building app...');
-  execSync('next build --no-lint --no-prebundle', { stdio: 'inherit' });
+  execSync('NEXT_SKIP_PREFLIGHT=1 next build --no-lint --no-prebundle', { stdio: 'inherit' });
 } finally {
   // 恢复原始配置
   if (originalTsconfig) {
