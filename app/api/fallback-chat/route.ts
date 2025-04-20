@@ -62,7 +62,7 @@ export async function POST(req: Request): Promise<NextResponse | Response> {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: "Qwen/QwQ-32B",
+        model: "deepseek-ai/DeepSeek-V3",
         messages: flatMessages,
         stream: true,
         max_tokens: 512,

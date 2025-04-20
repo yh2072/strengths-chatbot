@@ -238,6 +238,15 @@ const createSiliconFlowAdapter = (model: string) => {
             let buffer = '';
             
             try {
+              // 添加一个定时器，定期检查是否有未发送的内容
+              const heartbeatInterval = setInterval(() => {
+                if (buffer.length > 0) {
+                  console.log('[心跳] 发送缓冲区内容:', buffer);
+                  controller.enqueue(new TextEncoder().encode(buffer));
+                  buffer = '';
+                }
+              }, 1000); // 每秒检查一次
+              
               while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
@@ -247,6 +256,8 @@ const createSiliconFlowAdapter = (model: string) => {
                     controller.enqueue(new TextEncoder().encode(buffer));
                     buffer = '';
                   }
+                  // 记得在完成或错误时清除定时器
+                  clearInterval(heartbeatInterval);
                   break;
                 }
                 
@@ -288,11 +299,24 @@ const createSiliconFlowAdapter = (model: string) => {
                         console.log('[SSE] 提取的内容:', content);
                         buffer += content;
                         
-                        // 每积累一定量的文本就输出一次
-                        if (buffer.length > 10 || buffer.includes('\n')) {
-                          console.log('[流输出] 发送缓冲区内容:', buffer);
-                          controller.enqueue(new TextEncoder().encode(buffer));
-                          buffer = '';
+                        // 改进SSE数据解析，确保即使数据格式有微小差异也能正确处理
+                        try {
+                          const rawData = line.substring(6);
+                          const data = JSON.parse(rawData);
+                          
+                          // 更健壮的内容提取
+                          const content = data.choices?.[0]?.delta?.content || '';
+                          if (content) {
+                            buffer += content;
+                            // 更频繁地发送内容
+                            if (buffer.length > 0) {
+                              console.log('[流输出] 发送缓冲区内容:', buffer);
+                              controller.enqueue(new TextEncoder().encode(buffer));
+                              buffer = '';
+                            }
+                          }
+                        } catch (e) {
+                          // 保留错误日志但继续处理
                         }
                       } else {
                         console.log('[SSE] 此消息无内容');

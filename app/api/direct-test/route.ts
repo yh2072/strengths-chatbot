@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   
   // 最简单的请求结构
   const requestBody = {
-    model: "Qwen/QwQ-32B",
+    model: "deepseek-ai/DeepSeek-V3",
     messages: [
       {
         role: "user",
