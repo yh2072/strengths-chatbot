@@ -241,7 +241,12 @@ const createSiliconFlowAdapter = (model: string) => {
               while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
-                  console.log('================== 流结束 ==================');
+                  // 确保在流结束时发送剩余的所有内容
+                  if (buffer.length > 0) {
+                    console.log('[流结束] 发送剩余内容:', buffer);
+                    controller.enqueue(new TextEncoder().encode(buffer));
+                    buffer = '';
+                  }
                   break;
                 }
                 
