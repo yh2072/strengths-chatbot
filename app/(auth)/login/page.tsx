@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState, Suspense } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { toast } from '@/components/toast';
 import dynamic from 'next/dynamic';
 
@@ -12,11 +12,28 @@ import { SubmitButton } from '@/components/submit-button';
 import { login, type LoginActionState } from '../actions';
 import { storeUserInfo } from '@/app/actions/auth';
 
-// 动态导入Lottie组件，禁用SSR
-const LottieAnimation = dynamic(
-  () => import('@/components/lottie-animation'),
-  { ssr: false }  // 关键修复：禁用服务器端渲染
-);
+// 创建一个完全客户端的动画组件
+const ClientOnlyLottie = () => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  if (!isMounted) {
+    return <div className="w-40 h-40 bg-indigo-100/20 rounded-full flex items-center justify-center">加载中...</div>;
+  }
+  
+  // 使用正确的路径
+  const LottieAnimation = dynamic(() => import('@/components/lottie-animation'), {
+    ssr: false,
+    loading: () => <div className="w-40 h-40 bg-indigo-100/20 rounded-full"></div>
+  });
+  
+  // 只渲染一个动画实例
+  return <LottieAnimation animationPath="/animations/login.json" className="w-full h-full" />;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,8 +45,15 @@ export default function LoginPage() {
     login,
     {
       status: 'idle',
-    },
+    }
   );
+
+  // 添加安全检查，防止undefined错误
+  useEffect(() => {
+    if (state && state.status === 'success') {
+      router.push('/');
+    }
+  }, [state, router]);
 
   useEffect(() => {
     if (state.status === 'failed') {
@@ -60,7 +84,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-indigo-50 to-purple-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-r from-purple-100 via-indigo-50 to-blue-100 flex items-center justify-center p-4">
       {/* 浮动气泡背景 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-indigo-300/20 mix-blend-multiply filter blur-3xl animate-blob"></div>
@@ -82,12 +106,8 @@ export default function LoginPage() {
             </div>
             
             <div className="relative w-40 h-40 my-4">
-              {typeof window !== 'undefined' && (
-                <LottieAnimation 
-                  animationPath="/animations/easter.json" 
-                  className="w-full h-full"
-                />
-              )}
+              {/* 使用纯客户端组件，避免水合错误 */}
+              <ClientOnlyLottie />
             </div>
             
             <h2 className="text-xl font-bold mb-2 text-center">治愈系成长助手</h2>

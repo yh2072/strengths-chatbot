@@ -9,6 +9,7 @@ import { redirect } from 'next/navigation';
 import { createUser as createUserInDb, getUser } from '@/lib/db/queries';
 
 import { signIn } from './auth';
+import GeetestService from '@/lib/geetest';
 
 const authFormSchema = z.object({
   email: z.string().email(),
@@ -63,22 +64,57 @@ export type RegisterActionState = {
   message?: string;
 };
 
-// 注册操作
+// 创建极验服务实例
+const geetestService = new GeetestService({
+  captchaId: process.env.GEETEST_CAPTCHA_ID || '',
+  captchaKey: process.env.GEETEST_CAPTCHA_KEY || '',
+  apiServer: process.env.GEETEST_API_SERVER || 'http://gcaptcha4.geetest.com'
+});
+
+// 注册处理
 export async function register(prevState: RegisterActionState, formData: FormData): Promise<RegisterActionState> {
   try {
-    // 提取并验证表单数据
+    // 获取表单数据
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
     
-    // 使用Zod验证数据
-    const validationResult = RegisterSchema.safeParse({ email, password, confirmPassword });
+    // 处理极验验证数据
+    const geetestDataString = formData.get('geetestData') as string;
     
-    if (!validationResult.success) {
-      // 返回验证错误信息
-      const errorMessage = validationResult.error.errors[0]?.message || '表单数据无效';
-      console.error('表单验证失败:', errorMessage);
-      return { status: 'error', message: errorMessage };
+    // 在生产环境中验证极验数据
+    if (process.env.NODE_ENV === 'production' && geetestDataString) {
+      try {
+        const geetestData = JSON.parse(geetestDataString);
+        const { lotNumber, captchaOutput, passToken, genTime } = geetestData;
+        
+        // 验证极验数据
+        if (lotNumber && captchaOutput && passToken && genTime) {
+          const verifyResult = await geetestService.validateCaptcha({
+            lotNumber,
+            captchaOutput,
+            passToken,
+            genTime
+          });
+          
+          if (verifyResult.result !== 'success') {
+            return {
+              status: 'error',
+              message: '验证码验证失败，请刷新页面重试'
+            };
+          }
+        } else {
+          return {
+            status: 'error',
+            message: '验证码数据不完整，请刷新页面重试'
+          };
+        }
+      } catch (error) {
+        console.error('极验验证解析错误:', error);
+        return {
+          status: 'error',
+          message: '验证码数据解析失败，请刷新页面重试'
+        };
+      }
     }
     
     // 检查邮箱是否已被使用

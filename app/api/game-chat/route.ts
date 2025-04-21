@@ -1,5 +1,13 @@
 import { NextRequest } from 'next/server';
 import { sanitizeInput } from '@/lib/security'; // 创建一个安全处理工具库
+import GeetestService from '@/lib/geetest';
+
+// 创建极验服务实例
+const geetestService = new GeetestService({
+  captchaId: process.env.GEETEST_CAPTCHA_ID || '',
+  captchaKey: process.env.GEETEST_CAPTCHA_KEY || '',
+  apiServer: process.env.GEETEST_API_SERVER || 'http://gcaptcha4.geetest.com'
+});
 
 // 角色提示模板
 const CHARACTER_PROMPTS = {
@@ -74,12 +82,47 @@ type Message = {
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
-    const { messages, characterId, exerciseId, currentStep } = await request.json() as {
+    const { messages, characterId, exerciseId, currentStep, geetestData } = await request.json() as {
       messages: Message[];
       characterId: string;
       exerciseId: string;
       currentStep: number;
+      geetestData?: {
+        lotNumber: string;
+        captchaOutput: string;
+        passToken: string;
+        genTime: string;
+      };
     };
+    
+    // 添加极验验证检查（仅针对新会话，可根据messages长度判断）
+    if (messages.length <= 1 && geetestData) {
+      // 新会话需要验证极验
+      const { lotNumber, captchaOutput, passToken, genTime } = geetestData;
+      
+      // 如果提供了极验数据，则进行验证
+      if (lotNumber && captchaOutput && passToken && genTime) {
+        const verifyResult = await geetestService.validateCaptcha({
+          lotNumber,
+          captchaOutput,
+          passToken,
+          genTime
+        });
+        
+        if (verifyResult.result !== 'success') {
+          return new Response(
+            JSON.stringify({ error: '验证码验证失败，请重试' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (process.env.NODE_ENV === 'production') {
+        // 生产环境下，新会话必须提供极验验证
+        return new Response(
+          JSON.stringify({ error: '需要完成验证码验证' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
     
     // 深度净化用户输入
     const sanitizedMessages = messages.map(msg => {
