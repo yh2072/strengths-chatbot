@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { sanitizeInput } from '@/lib/security'; // 创建一个安全处理工具库
 
 // 角色提示模板
 const CHARACTER_PROMPTS = {
@@ -80,7 +81,31 @@ export async function POST(request: NextRequest): Promise<Response> {
       currentStep: number;
     };
     
-    if (!characterId || !exerciseId) {
+    // 深度净化用户输入
+    const sanitizedMessages = messages.map(msg => {
+      if (msg.role === 'user') {
+        // 检测可能的注入攻击模式
+        const originalInput = msg.content;
+        const sanitizedInput = sanitizeInput(originalInput);
+        
+        // 如果检测到可能的攻击，记录警告
+        if (originalInput !== sanitizedInput && 
+            originalInput.length > 10 && 
+            sanitizedInput.includes('[内容已过滤]')) {
+          console.warn(`可能的Prompt注入尝试: ${originalInput.substring(0, 100)}...`);
+          
+          // 对于严重的尝试，甚至可以加入惩罚逻辑，如降低用户可使用的token限额等
+        }
+        
+        return { ...msg, content: sanitizedInput };
+      }
+      return msg;
+    });
+    
+    const sanitizedCharacterId = sanitizeInput(characterId);
+    const sanitizedExerciseId = sanitizeInput(exerciseId);
+    
+    if (!sanitizedCharacterId || !sanitizedExerciseId) {
       return new Response(
         JSON.stringify({ error: '缺少必要参数' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -88,8 +113,8 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
     
     // 使用类型断言保证类型安全
-    const characterPrompt = CHARACTER_PROMPTS[characterId as CharacterId] || CHARACTER_PROMPTS.einstein;
-    const exercisePrompt = EXERCISE_PROMPTS[exerciseId as ExerciseId] || '';
+    const characterPrompt = CHARACTER_PROMPTS[sanitizedCharacterId as CharacterId] || CHARACTER_PROMPTS.einstein;
+    const exercisePrompt = EXERCISE_PROMPTS[sanitizedExerciseId as ExerciseId] || '';
     
     // 构建系统提示
     const systemPrompt = `${characterPrompt}\n\n${exercisePrompt}\n\n当前用户正在练习的第${currentStep + 1}步。
@@ -105,19 +130,23 @@ ${currentStep === 4 ? "引导用户观察能量和满足感的变化" : ""}
 
 请根据当前步骤引导用户，但保持自然对话风格，允许用户自由表达。不要强制限制用户必须完全按照步骤进行，可以根据对话流程适当调整。以对应角色身份回应，保持风格一致性。始终使用中文回复用户。`;
     
+    // 安全地构建请求，确保用户输入不能影响系统指令
+    const formattedMessages = [
+      { role: "system", content: systemPrompt }, // 系统指令始终作为第一条消息
+    ];
+    
+    // 添加格式化后的用户和助手消息
+    sanitizedMessages.forEach(msg => {
+      formattedMessages.push({
+        role: msg.role === "user" ? "user" : "assistant",
+        content: msg.content
+      });
+    });
+    
     // 使用硅基流动API
     const requestBody = {
       model: "deepseek-ai/DeepSeek-V3", // 使用DeepSeek-V3模型
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        ...messages.map((m: Message) => ({
-          role: m.role === "user" ? "user" : "assistant",
-          content: m.content
-        }))
-      ],
+      messages: formattedMessages,
       temperature: 0.7,
       top_p: 0.7,
       top_k: 50,
