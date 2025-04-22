@@ -40,12 +40,6 @@
 
 
 
-## 部署自己的版本
-
-您可以通过一键点击将 Character Strengths Chatbot 的自己版本部署到 Vercel：
-
-[![使用 Vercel 部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET&envDescription=Generate%20a%20random%20secret%20to%20use%20for%20authentication&envLink=https%3A%2F%2Fgenerate-secret.vercel.app%2F32&project-name=character-strengths-chatbot&repository-name=character-strengths-chatbot&demo-title=Character%20Strengths%20Chatbot&demo-description=一个基于%20Next.js%20和%20AI%20SDK%20构建的开源性格优势聊天机器人模板&demo-url=https%3A%2F%2Fchat.vercel.ai&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22ai%22%2C%22productSlug%22%3A%22grok%22%2C%22integrationSlug%22%3A%22xai%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D)
-
 ## 本地运行
 
 您需要使用[`.env.example`](.env.example)中定义的环境变量来运行 Character Strengths Chatbot。建议使用 [Vercel 环境变量](https://vercel.com/docs/projects/environment-variables)，但`.env`文件也足够了。
